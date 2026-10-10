@@ -1,0 +1,340 @@
+{
+  "name": "Duraku Glanzservice – Website-Anfragen",
+  "nodes": [
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000001",
+      "name": "Anfrage empfangen",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "a1f0c001-0000-4000-8000-0000000000aa",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "duraku-anfrage",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000002",
+      "name": "Anfrage prüfen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "jsCode": "// n8n Code-Node \"Anfrage prüfen\": validiert und bereinigt die Formulardaten der Website.\nconst body = $input.first().json.body ?? {};\n\nconst SERVICES = ['Fensterreinigung', 'Wintergärten', 'Büroreinigung', 'Mehrere Leistungen'];\n\nconst oneLine = (v, max) => String(v ?? '').replace(/[\\u0000-\\u001F\\u007F]+/g, ' ').trim().slice(0, max);\nconst multiLine = (v, max) =>\n  String(v ?? '')\n    .replace(/\\r\\n?/g, '\\n')\n    .replace(/[\\u0000-\\u0009\\u000B-\\u001F\\u007F]+/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim()\n    .slice(0, max);\nconst escapeHtml = (s) =>\n  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;').replace(/'/g, '&#39;');\n\n// Honeypot: Das Feld \"website\" ist für Menschen unsichtbar – nur Bots füllen es aus.\nconst spam = oneLine(body.website, 200) !== '';\n\nconst data = {\n  name: oneLine(body.name, 100),\n  email: oneLine(body.email, 254).toLowerCase(),\n  phone: oneLine(body.phone, 40),\n  service: oneLine(body.service, 50),\n  message: multiLine(body.message, 3000),\n};\n\nconst errors = [];\nif (data.name.length < 2) errors.push('Bitte einen Namen angeben.');\nif (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(data.email)) errors.push('Bitte eine gültige E-Mail-Adresse angeben.');\nif (data.phone && !/^[+0-9 ()\\/-]{6,40}$/.test(data.phone)) errors.push('Telefonnummer enthält ungültige Zeichen.');\nif (!SERVICES.includes(data.service)) data.service = 'Mehrere Leistungen';\n\nconst html = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, escapeHtml(v)]));\nhtml.message = html.message.replace(/\\n/g, '<br>');\nhtml.summary = [\n  `Name: ${html.name}`,\n  `E-Mail: ${html.email}`,\n  `Telefon: ${html.phone || '–'}`,\n  `Leistung: ${html.service}`,\n].join('<br>');\n\nconst receivedAt = new Date().toLocaleString('de-AT', { timeZone: 'Europe/Vienna' });\n\nreturn [{ json: { spam, valid: !spam && errors.length === 0, errors, data, html, receivedAt } }];\n"
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000003",
+      "name": "Spam?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c0000001-0000-4000-8000-000000000001",
+              "leftValue": "={{ $json.spam }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000004",
+      "name": "Spam still verwerfen",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        660,
+        120
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000005",
+      "name": "Gültig?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        400
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c0000001-0000-4000-8000-000000000002",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000006",
+      "name": "Fehler 400 melden",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        560
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": false, \"errors\": $json.errors } }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000007",
+      "name": "Mail an Duraku",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "duraku-glanz@outlook.com",
+        "subject": "=Neue Anfrage: {{ $json.data.service }} – {{ $json.data.name }}",
+        "bodyContent": "=<div style=\"font-family:Arial,sans-serif;max-width:600px\">\n<h2 style=\"color:#1d4ed8;margin:0 0 12px\">Neue Anfrage über die Website</h2>\n<table style=\"border-collapse:collapse;width:100%\">\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Name</td><td style=\"padding:6px 0\"><strong>{{ $json.html.name }}</strong></td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">E-Mail</td><td style=\"padding:6px 0\"><a href=\"mailto:{{ $json.html.email }}\">{{ $json.html.email }}</a></td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Telefon</td><td style=\"padding:6px 0\">{{ $json.html.phone || '–' }}</td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Leistung</td><td style=\"padding:6px 0\">{{ $json.html.service }}</td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Eingegangen</td><td style=\"padding:6px 0\">{{ $json.receivedAt }}</td></tr>\n</table>\n<h3 style=\"margin:16px 0 6px\">Nachricht</h3>\n<div style=\"background:#f1f5f9;padding:12px;border-radius:6px\">{{ $json.html.message || '<em>Keine Nachricht</em>' }}</div>\n<p style=\"color:#64748b;font-size:12px;margin-top:16px\">Tipp: Einfach auf diese Mail antworten – die Antwort geht direkt an den Kunden.</p>\n</div>",
+        "additionalFields": {
+          "bodyContentType": "html",
+          "replyTo": "={{ $json.data.email }}",
+          "importance": "High"
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000008",
+      "name": "Bestätigung an Kunden",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        220
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $('Anfrage prüfen').item.json.data.email }}",
+        "subject": "Ihre Anfrage bei Duraku Glanzservice",
+        "bodyContent": "=<div style=\"font-family:Arial,sans-serif;max-width:600px\">\n<p>Hallo {{ $('Anfrage prüfen').item.json.html.name }},</p>\n<p>vielen Dank für Ihre Anfrage zu <strong>{{ $('Anfrage prüfen').item.json.html.service }}</strong>. Wir haben sie erhalten und melden uns in der Regel innerhalb von 24 Stunden mit einem Angebot.</p>\n<p>Bei dringenden Fragen erreichen Sie uns telefonisch unter <a href=\"tel:+4367764165633\">0677 64165633</a>.</p>\n<p>Freundliche Grüße<br><strong>Duraku Glanzservice</strong><br>Fenster- &amp; Glasreinigung in Linz &amp; Umgebung</p>\n<hr style=\"border:none;border-top:1px solid #e2e8f0\">\n<p style=\"color:#64748b;font-size:12px\">Ihre Angaben:<br>{{ $('Anfrage prüfen').item.json.html.summary }}</p>\n</div>",
+        "additionalFields": {
+          "bodyContentType": "html",
+          "replyTo": "duraku-glanz@outlook.com"
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000009",
+      "name": "Erfolg melden",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        220
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": true } }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000010",
+      "name": "Fehler 500 melden",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        420
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"ok\": false, \"errors\": [\"Versand fehlgeschlagen\"] } }}",
+        "options": {
+          "responseCode": 500
+        }
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000011",
+      "name": "Hinweis",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -60
+      ],
+      "parameters": {
+        "width": 620,
+        "height": 260,
+        "content": "## Website-Anfragen Duraku Glanzservice\n1. Beide Outlook-Nodes: Microsoft-Outlook-Zugangsdaten (OAuth2) für duraku-glanz@outlook.com wählen.\n2. Workflow aktivieren, dann die **Production URL** des Webhooks kopieren.\n3. URL auf der Website in `WEBHOOK_URL` eintragen.\n\nSpam (Honeypot-Feld) wird still verworfen, ungültige Daten bekommen 400, scheitert die Mail an Duraku, bekommt die Website 500 und öffnet als Ausweichlösung das Mailprogramm."
+      }
+    }
+  ],
+  "connections": {
+    "Anfrage empfangen": {
+      "main": [
+        [
+          {
+            "node": "Anfrage prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anfrage prüfen": {
+      "main": [
+        [
+          {
+            "node": "Spam?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fehler 500 melden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spam?": {
+      "main": [
+        [
+          {
+            "node": "Spam still verwerfen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Gültig?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gültig?": {
+      "main": [
+        [
+          {
+            "node": "Mail an Duraku",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fehler 400 melden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mail an Duraku": {
+      "main": [
+        [
+          {
+            "node": "Bestätigung an Kunden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fehler 500 melden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bestätigung an Kunden": {
+      "main": [
+        [
+          {
+            "node": "Erfolg melden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Vienna",
+    "saveDataErrorExecution": "all"
+  },
+  "pinData": {}
+}
