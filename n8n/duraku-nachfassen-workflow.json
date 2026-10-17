@@ -1,0 +1,351 @@
+{
+  "name": "Duraku Glanzservice – Nachfassen",
+  "nodes": [
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000029",
+      "name": "Täglich 9 Uhr",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000030",
+      "name": "Alle Anfragen laden",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "duraku_anfragen",
+          "cachedResultName": "duraku_anfragen"
+        },
+        "matchType": "anyCondition",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "neu"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "angebot"
+            },
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "erledigt"
+            }
+          ]
+        },
+        "returnAll": true
+      }
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000031",
+      "name": "Fällige Aktionen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// n8n Code-Node \"Fällige Aktionen\": entscheidet jeden Morgen, wer welche Mail bekommt.\n//  - Anfrage seit 20 h \"neu\"                 → Erinnerung an Duraku (einmal)\n//  - \"Angebot gesendet\" seit 3 bzw. 7 Tagen → 1. bzw. 2. Nachfrage beim Kunden\n//  - \"Erledigt\" seit 1 Tag                   → Bitte um Google-Bewertung (nur wenn Link gesetzt)\n\nconst OWNER_EMAIL = 'duraku-glanz@outlook.com';\nconst OWNER_PHONE = '0677 64165633';\n// Google-Bewertungslink (Google Unternehmensprofil → \"Nach Rezensionen fragen\"). Leer = keine Bewertungsmails.\nconst GOOGLE_REVIEW_URL = '';\n// Leer lassen = Adresse wird aus der n8n-Instanz abgeleitet.\nconst STATUS_URL_OVERRIDE = '';\n\nconst HOUR = 36e5;\nconst DAY = 24 * HOUR;\nconst now = Date.now();\n\nconst statusUrl =\n  STATUS_URL_OVERRIDE || $execution.resumeUrl.replace(/webhook-waiting\\/.*$/, '') + 'webhook/duraku-status';\n\nconst escapeHtml = (s) =>\n  String(s ?? '')\n    .replace(/&/g, '&amp;')\n    .replace(/</g, '&lt;')\n    .replace(/>/g, '&gt;')\n    .replace(/\"/g, '&quot;')\n    .replace(/'/g, '&#39;');\n\nconst ACTIONS = [\n  ['angebot', 'Angebot gesendet', '#2563eb'],\n  ['auftrag', 'Auftrag erhalten', '#16a34a'],\n  ['erledigt', 'Erledigt', '#0f766e'],\n  ['abgesagt', 'Abgesagt', '#64748b'],\n];\nconst buttons = (token) =>\n  ACTIONS.map(\n    ([action, label, color]) =>\n      `<a href=\"${statusUrl}?t=${encodeURIComponent(token)}&amp;a=${action}\" ` +\n      `style=\"display:inline-block;margin:0 6px 6px 0;padding:8px 14px;border-radius:6px;` +\n      `background:${color};color:#fff;text-decoration:none;font-weight:bold\">${label}</a>`\n  ).join('');\n\nconst wrap = (inner) => `<div style=\"font-family:Arial,sans-serif;max-width:600px\">${inner}</div>`;\nconst signature = `<p>Freundliche Grüße<br><strong>Duraku Glanzservice</strong><br>\nFenster- &amp; Glasreinigung in Linz &amp; Umgebung<br>Tel. ${OWNER_PHONE}</p>`;\nconst optOut = `<p style=\"color:#64748b;font-size:12px\">Sie möchten keine weiteren E-Mails von uns?\nAntworten Sie einfach mit „Abmelden“.</p>`;\n\nconst since = (iso) => {\n  const t = Date.parse(iso);\n  return Number.isNaN(t) ? 0 : now - t;\n};\n\nconst out = [];\nfor (const { json: row } of $input.all()) {\n  if (!row || !row.token || !row.email) continue;\n\n  const name = escapeHtml(row.name);\n  const service = escapeHtml(row.service);\n  const state = {\n    ownerReminded: Number(row.ownerReminded) || 0,\n    followUps: Number(row.followUps) || 0,\n    reviewSent: Number(row.reviewSent) || 0,\n  };\n  const send = (mail, update) => out.push({ json: { token: row.token, ...mail, update: { ...state, ...update } } });\n\n  if (row.status === 'neu' && !state.ownerReminded && since(row.createdAt) >= 20 * HOUR) {\n    send(\n      {\n        kind: 'erinnerung',\n        to: OWNER_EMAIL,\n        replyTo: row.email,\n        subject: `Erinnerung: Anfrage von ${row.name} wartet noch`,\n        html: wrap(`<h2 style=\"color:#b45309;margin:0 0 12px\">Diese Anfrage wartet noch auf Antwort</h2>\n<p><strong>${name}</strong> – ${service}<br>\n<a href=\"mailto:${escapeHtml(row.email)}\">${escapeHtml(row.email)}</a> · ${escapeHtml(row.phone) || 'kein Telefon'}<br>\nEingegangen: ${new Date(row.createdAt).toLocaleString('de-AT', { timeZone: 'Europe/Vienna' })}</p>\n<div style=\"background:#f1f5f9;padding:12px;border-radius:6px\">${escapeHtml(row.message).replace(/\\n/g, '<br>') || '<em>Keine Nachricht</em>'}</div>\n<p style=\"margin-top:16px\">Status setzen:</p>${buttons(row.token)}`),\n      },\n      { ownerReminded: 1 }\n    );\n  } else if (row.status === 'angebot' && state.followUps === 0 && since(row.statusAt) >= 3 * DAY) {\n    send(\n      {\n        kind: 'nachfrage-1',\n        to: row.email,\n        replyTo: OWNER_EMAIL,\n        subject: `Ihr Angebot für ${row.service} – Duraku Glanzservice`,\n        html: wrap(`<p>Hallo ${name},</p>\n<p>wir wollten kurz nachfragen, ob unser Angebot für <strong>${service}</strong> gut angekommen ist und ob Sie dazu noch Fragen haben.</p>\n<p>Antworten Sie einfach auf diese E-Mail oder rufen Sie uns an – wir finden gerne einen passenden Termin.</p>\n${signature}${optOut}`),\n      },\n      { followUps: 1 }\n    );\n  } else if (row.status === 'angebot' && state.followUps === 1 && since(row.statusAt) >= 7 * DAY) {\n    send(\n      {\n        kind: 'nachfrage-2',\n        to: row.email,\n        replyTo: OWNER_EMAIL,\n        subject: `Kurze letzte Nachfrage zu Ihrem Angebot`,\n        html: wrap(`<p>Hallo ${name},</p>\n<p>nur eine kurze letzte Nachfrage zu unserem Angebot für <strong>${service}</strong>.\nFalls der Zeitpunkt gerade nicht passt, ist das kein Problem – melden Sie sich einfach, wenn es so weit ist.</p>\n${signature}${optOut}`),\n      },\n      { followUps: 2 }\n    );\n  } else if (row.status === 'erledigt' && !state.reviewSent && GOOGLE_REVIEW_URL && since(row.statusAt) >= DAY) {\n    send(\n      {\n        kind: 'bewertung',\n        to: row.email,\n        replyTo: OWNER_EMAIL,\n        subject: 'Danke für Ihren Auftrag – Duraku Glanzservice',\n        html: wrap(`<p>Hallo ${name},</p>\n<p>vielen Dank, dass Sie uns mit <strong>${service}</strong> beauftragt haben. Wir hoffen, Sie haben wieder den vollen Durchblick!</p>\n<p>Wenn Sie zufrieden waren, würde uns eine kurze Google-Bewertung sehr helfen – das dauert nur eine Minute:</p>\n<p><a href=\"${escapeHtml(GOOGLE_REVIEW_URL)}\" style=\"display:inline-block;padding:10px 18px;border-radius:6px;background:#2563eb;color:#fff;text-decoration:none;font-weight:bold\">Jetzt bewerten</a></p>\n<p>Und falls etwas nicht gepasst hat, antworten Sie bitte direkt auf diese Mail – wir kümmern uns darum.</p>\n${signature}${optOut}`),\n      },\n      { reviewSent: 1 }\n    );\n  }\n}\n\nreturn out;\n"
+      }
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000032",
+      "name": "Mail senden",
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "toRecipients": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "bodyContent": "={{ $json.html }}",
+        "additionalFields": {
+          "bodyContentType": "html",
+          "replyTo": "={{ $json.replyTo }}"
+        }
+      }
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000033",
+      "name": "Als erledigt markieren",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        220
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "duraku_anfragen",
+          "cachedResultName": "duraku_anfragen"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "token",
+              "condition": "eq",
+              "keyValue": "={{ $('Fällige Aktionen').item.json.token }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ownerReminded": "={{ $('Fällige Aktionen').item.json.update.ownerReminded }}",
+            "followUps": "={{ $('Fällige Aktionen').item.json.update.followUps }}",
+            "reviewSent": "={{ $('Fällige Aktionen').item.json.update.reviewSent }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ownerReminded",
+              "displayName": "ownerReminded",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "followUps",
+              "displayName": "followUps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reviewSent",
+              "displayName": "reviewSent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000034",
+      "name": "Morgen erneut versuchen",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        400
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000035",
+      "name": "Einmalig: Tabelle anlegen",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        620
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000036",
+      "name": "Tabelle anlegen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        620
+      ],
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "duraku_anfragen",
+        "columns": {
+          "column": [
+            {
+              "name": "token",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "email",
+              "type": "string"
+            },
+            {
+              "name": "phone",
+              "type": "string"
+            },
+            {
+              "name": "service",
+              "type": "string"
+            },
+            {
+              "name": "message",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "string"
+            },
+            {
+              "name": "createdAt",
+              "type": "string"
+            },
+            {
+              "name": "statusAt",
+              "type": "string"
+            },
+            {
+              "name": "ownerReminded",
+              "type": "number"
+            },
+            {
+              "name": "followUps",
+              "type": "number"
+            },
+            {
+              "name": "reviewSent",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c3f0c003-0000-4000-8000-000000000037",
+      "name": "Hinweis",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -60
+      ],
+      "parameters": {
+        "width": 700,
+        "height": 300,
+        "content": "## Nachfassen (täglich 9 Uhr)\n- Anfrage seit 20 h „neu“ → Erinnerung an Duraku\n- „Angebot gesendet“ seit 3 / 7 Tagen → 1. / 2. Nachfrage beim Kunden\n- „Erledigt“ seit 1 Tag → Bitte um Google-Bewertung\n\n**Einrichtung:** 1. Unten „Tabelle anlegen“ einmal ausführen. 2. Outlook-Zugangsdaten wählen. 3. Im Node „Fällige Aktionen“ `GOOGLE_REVIEW_URL` eintragen (leer = keine Bewertungsmails). 4. Aktivieren."
+      }
+    }
+  ],
+  "connections": {
+    "Täglich 9 Uhr": {
+      "main": [
+        [
+          {
+            "node": "Alle Anfragen laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alle Anfragen laden": {
+      "main": [
+        [
+          {
+            "node": "Fällige Aktionen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fällige Aktionen": {
+      "main": [
+        [
+          {
+            "node": "Mail senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mail senden": {
+      "main": [
+        [
+          {
+            "node": "Als erledigt markieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Morgen erneut versuchen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Einmalig: Tabelle anlegen": {
+      "main": [
+        [
+          {
+            "node": "Tabelle anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Vienna",
+    "saveDataErrorExecution": "all"
+  },
+  "pinData": {}
+}

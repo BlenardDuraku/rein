@@ -35,7 +35,7 @@
       }
     },
     {
-      "id": "a1f0c001-0000-4000-8000-000000000003",
+      "id": "a1f0c001-0000-4000-8000-000000000004",
       "name": "Spam?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -52,7 +52,7 @@
           },
           "conditions": [
             {
-              "id": "c0000001-0000-4000-8000-000000000001",
+              "id": "c0000001-0000-4000-8000-000000000003",
               "leftValue": "={{ $json.spam }}",
               "rightValue": "",
               "operator": {
@@ -68,7 +68,7 @@
       }
     },
     {
-      "id": "a1f0c001-0000-4000-8000-000000000004",
+      "id": "a1f0c001-0000-4000-8000-000000000005",
       "name": "Spam still verwerfen",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
@@ -85,7 +85,7 @@
       }
     },
     {
-      "id": "a1f0c001-0000-4000-8000-000000000005",
+      "id": "a1f0c001-0000-4000-8000-000000000007",
       "name": "Gültig?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
@@ -102,7 +102,7 @@
           },
           "conditions": [
             {
-              "id": "c0000001-0000-4000-8000-000000000002",
+              "id": "c0000001-0000-4000-8000-000000000006",
               "leftValue": "={{ $json.valid }}",
               "rightValue": "",
               "operator": {
@@ -118,13 +118,13 @@
       }
     },
     {
-      "id": "a1f0c001-0000-4000-8000-000000000006",
+      "id": "a1f0c001-0000-4000-8000-000000000008",
       "name": "Fehler 400 melden",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
         880,
-        560
+        600
       ],
       "parameters": {
         "respondWith": "json",
@@ -135,13 +135,194 @@
       }
     },
     {
-      "id": "a1f0c001-0000-4000-8000-000000000007",
+      "id": "a1f0c001-0000-4000-8000-000000000009",
+      "name": "Token erzeugen",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 2,
+      "position": [
+        880,
+        380
+      ],
+      "parameters": {
+        "action": "generate",
+        "dataPropertyName": "token",
+        "encodingType": "uuid"
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000010",
+      "name": "Lead vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        380
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "jsCode": "// n8n Code-Node \"Lead vorbereiten\": baut den Tabellen-Datensatz und die Status-Buttons für die Mail an Duraku.\n\n// Leer lassen = Adresse wird aus der n8n-Instanz abgeleitet. Nur setzen, falls die Buttons ins Leere zeigen.\nconst STATUS_URL_OVERRIDE = '';\n\nconst statusUrl =\n  STATUS_URL_OVERRIDE || $execution.resumeUrl.replace(/webhook-waiting\\/.*$/, '') + 'webhook/duraku-status';\n\nconst ACTIONS = [\n  ['angebot', 'Angebot gesendet', '#2563eb'],\n  ['auftrag', 'Auftrag erhalten', '#16a34a'],\n  ['erledigt', 'Erledigt', '#0f766e'],\n  ['abgesagt', 'Abgesagt', '#64748b'],\n];\n\nconst lead = $('Anfrage prüfen').first().json;\nconst token = String($input.first().json.token);\nconst now = new Date().toISOString();\n\nconst buttonsHtml = ACTIONS.map(\n  ([action, label, color]) =>\n    `<a href=\"${statusUrl}?t=${encodeURIComponent(token)}&amp;a=${action}\" ` +\n    `style=\"display:inline-block;margin:0 6px 6px 0;padding:8px 14px;border-radius:6px;` +\n    `background:${color};color:#fff;text-decoration:none;font-weight:bold\">${label}</a>`\n).join('');\n\nreturn [\n  {\n    json: {\n      row: {\n        token,\n        ...lead.data,\n        status: 'neu',\n        createdAt: now,\n        statusAt: now,\n        ownerReminded: 0,\n        followUps: 0,\n        reviewSent: 0,\n      },\n      buttonsHtml,\n    },\n  },\n];\n"
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000011",
+      "name": "Lead speichern",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1320,
+        380
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "duraku_anfragen",
+          "cachedResultName": "duraku_anfragen"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "token": "={{ $('Lead vorbereiten').item.json.row.token }}",
+            "name": "={{ $('Lead vorbereiten').item.json.row.name }}",
+            "email": "={{ $('Lead vorbereiten').item.json.row.email }}",
+            "phone": "={{ $('Lead vorbereiten').item.json.row.phone }}",
+            "service": "={{ $('Lead vorbereiten').item.json.row.service }}",
+            "message": "={{ $('Lead vorbereiten').item.json.row.message }}",
+            "status": "={{ $('Lead vorbereiten').item.json.row.status }}",
+            "createdAt": "={{ $('Lead vorbereiten').item.json.row.createdAt }}",
+            "statusAt": "={{ $('Lead vorbereiten').item.json.row.statusAt }}",
+            "ownerReminded": "={{ $('Lead vorbereiten').item.json.row.ownerReminded }}",
+            "followUps": "={{ $('Lead vorbereiten').item.json.row.followUps }}",
+            "reviewSent": "={{ $('Lead vorbereiten').item.json.row.reviewSent }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "service",
+              "displayName": "service",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createdAt",
+              "displayName": "createdAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "statusAt",
+              "displayName": "statusAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ownerReminded",
+              "displayName": "ownerReminded",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "followUps",
+              "displayName": "followUps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reviewSent",
+              "displayName": "reviewSent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a1f0c001-0000-4000-8000-000000000012",
       "name": "Mail an Duraku",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
       "position": [
-        880,
-        300
+        1540,
+        380
       ],
       "retryOnFail": true,
       "maxTries": 3,
@@ -151,23 +332,23 @@
         "resource": "message",
         "operation": "send",
         "toRecipients": "duraku-glanz@outlook.com",
-        "subject": "=Neue Anfrage: {{ $json.data.service }} – {{ $json.data.name }}",
-        "bodyContent": "=<div style=\"font-family:Arial,sans-serif;max-width:600px\">\n<h2 style=\"color:#1d4ed8;margin:0 0 12px\">Neue Anfrage über die Website</h2>\n<table style=\"border-collapse:collapse;width:100%\">\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Name</td><td style=\"padding:6px 0\"><strong>{{ $json.html.name }}</strong></td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">E-Mail</td><td style=\"padding:6px 0\"><a href=\"mailto:{{ $json.html.email }}\">{{ $json.html.email }}</a></td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Telefon</td><td style=\"padding:6px 0\">{{ $json.html.phone || '–' }}</td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Leistung</td><td style=\"padding:6px 0\">{{ $json.html.service }}</td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Eingegangen</td><td style=\"padding:6px 0\">{{ $json.receivedAt }}</td></tr>\n</table>\n<h3 style=\"margin:16px 0 6px\">Nachricht</h3>\n<div style=\"background:#f1f5f9;padding:12px;border-radius:6px\">{{ $json.html.message || '<em>Keine Nachricht</em>' }}</div>\n<p style=\"color:#64748b;font-size:12px;margin-top:16px\">Tipp: Einfach auf diese Mail antworten – die Antwort geht direkt an den Kunden.</p>\n</div>",
+        "subject": "=Neue Anfrage: {{ $('Anfrage prüfen').item.json.data.service }} – {{ $('Anfrage prüfen').item.json.data.name }}",
+        "bodyContent": "=<div style=\"font-family:Arial,sans-serif;max-width:600px\">\n<h2 style=\"color:#1d4ed8;margin:0 0 12px\">Neue Anfrage über die Website</h2>\n<table style=\"border-collapse:collapse;width:100%\">\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Name</td><td style=\"padding:6px 0\"><strong>{{ $('Anfrage prüfen').item.json.html.name }}</strong></td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">E-Mail</td><td style=\"padding:6px 0\"><a href=\"mailto:{{ $('Anfrage prüfen').item.json.html.email }}\">{{ $('Anfrage prüfen').item.json.html.email }}</a></td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Telefon</td><td style=\"padding:6px 0\">{{ $('Anfrage prüfen').item.json.html.phone || '–' }}</td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Leistung</td><td style=\"padding:6px 0\">{{ $('Anfrage prüfen').item.json.html.service }}</td></tr>\n<tr><td style=\"padding:6px 12px 6px 0;color:#64748b\">Eingegangen</td><td style=\"padding:6px 0\">{{ $('Anfrage prüfen').item.json.receivedAt }}</td></tr>\n</table>\n<h3 style=\"margin:16px 0 6px\">Nachricht</h3>\n<div style=\"background:#f1f5f9;padding:12px;border-radius:6px\">{{ $('Anfrage prüfen').item.json.html.message || '<em>Keine Nachricht</em>' }}</div>\n<h3 style=\"margin:20px 0 8px\">Status setzen</h3>\n<div>{{ $('Lead vorbereiten').item.json.buttonsHtml }}</div>\n<p style=\"color:#64748b;font-size:12px;margin-top:12px\">Nach dem Klick „Angebot gesendet“ fasst das System nach 3 und 7 Tagen automatisch beim Kunden nach.\nAuf diese Mail antworten = Antwort geht direkt an den Kunden.</p>\n</div>",
         "additionalFields": {
           "bodyContentType": "html",
-          "replyTo": "={{ $json.data.email }}",
+          "replyTo": "={{ $('Anfrage prüfen').item.json.data.email }}",
           "importance": "High"
         }
       }
     },
     {
-      "id": "a1f0c001-0000-4000-8000-000000000008",
+      "id": "a1f0c001-0000-4000-8000-000000000013",
       "name": "Bestätigung an Kunden",
       "type": "n8n-nodes-base.microsoftOutlook",
       "typeVersion": 2,
       "position": [
-        1100,
-        220
+        1760,
+        300
       ],
       "retryOnFail": true,
       "maxTries": 2,
@@ -186,13 +367,13 @@
       }
     },
     {
-      "id": "a1f0c001-0000-4000-8000-000000000009",
+      "id": "a1f0c001-0000-4000-8000-000000000014",
       "name": "Erfolg melden",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1320,
-        220
+        1980,
+        300
       ],
       "parameters": {
         "respondWith": "json",
@@ -203,13 +384,13 @@
       }
     },
     {
-      "id": "a1f0c001-0000-4000-8000-000000000010",
+      "id": "a1f0c001-0000-4000-8000-000000000015",
       "name": "Fehler 500 melden",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        1100,
-        420
+        1760,
+        520
       ],
       "parameters": {
         "respondWith": "json",
@@ -220,7 +401,7 @@
       }
     },
     {
-      "id": "a1f0c001-0000-4000-8000-000000000011",
+      "id": "a1f0c001-0000-4000-8000-000000000016",
       "name": "Hinweis",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -229,9 +410,9 @@
         -60
       ],
       "parameters": {
-        "width": 620,
+        "width": 640,
         "height": 260,
-        "content": "## Website-Anfragen Duraku Glanzservice\n1. Beide Outlook-Nodes: Microsoft-Outlook-Zugangsdaten (OAuth2) für duraku-glanz@outlook.com wählen.\n2. Workflow aktivieren, dann die **Production URL** des Webhooks kopieren.\n3. URL auf der Website in `WEBHOOK_URL` eintragen.\n\nSpam (Honeypot-Feld) wird still verworfen, ungültige Daten bekommen 400, scheitert die Mail an Duraku, bekommt die Website 500 und öffnet als Ausweichlösung das Mailprogramm."
+        "content": "## Website-Anfragen Duraku Glanzservice\n1. Zuerst den Workflow „Nachfassen“ importieren und dort „Tabelle anlegen“ einmal ausführen.\n2. Beide Outlook-Nodes: Microsoft-Outlook-Zugangsdaten (OAuth2) für duraku-glanz@outlook.com wählen.\n3. Workflow aktivieren, **Production URL** des Webhooks auf der Website in `WEBHOOK_URL` eintragen.\n\nSpam wird still verworfen, ungültige Daten bekommen 400, scheitert die Mail an Duraku, bekommt die Website 500 und öffnet als Ausweichlösung das Mailprogramm."
       }
     }
   ],
@@ -287,7 +468,7 @@
       "main": [
         [
           {
-            "node": "Mail an Duraku",
+            "node": "Token erzeugen",
             "type": "main",
             "index": 0
           }
@@ -295,6 +476,46 @@
         [
           {
             "node": "Fehler 400 melden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Token erzeugen": {
+      "main": [
+        [
+          {
+            "node": "Lead vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "Lead speichern",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fehler 500 melden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead speichern": {
+      "main": [
+        [
+          {
+            "node": "Mail an Duraku",
             "type": "main",
             "index": 0
           }
