@@ -1,0 +1,381 @@
+{
+  "name": "Duraku Glanzservice – Status-Buttons",
+  "nodes": [
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000017",
+      "name": "Status-Link geklickt",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        120
+      ],
+      "webhookId": "b2f0c002-0000-4000-8000-0000000000aa",
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "duraku-status",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000018",
+      "name": "Bestätigungsseite",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        120
+      ],
+      "parameters": {
+        "jsCode": "// n8n Code-Node \"Bestätigungsseite\": Klick auf einen Status-Button in der Mail zeigt erst diese Seite.\n// Geändert wird erst nach dem Bestätigen – so lösen Link-Scanner von Mailprogrammen nichts aus.\nconst q = $input.first().json.query ?? {};\n\nconst LABELS = {\n  angebot: 'Angebot gesendet',\n  auftrag: 'Auftrag erhalten',\n  erledigt: 'Erledigt',\n  abgesagt: 'Abgesagt',\n};\n\nconst token = String(q.t ?? '');\nconst action = String(q.a ?? '');\nconst valid = /^[0-9a-f-]{36}$/i.test(token) && Object.hasOwn(LABELS, action);\n\nconst page = (body) => `<!doctype html><html lang=\"de\"><head><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"robots\" content=\"noindex\">\n<title>Status ändern – Duraku Glanzservice</title></head>\n<body style=\"font-family:Arial,sans-serif;max-width:420px;margin:48px auto;padding:0 16px;text-align:center;color:#0f172a\">\n${body}</body></html>`;\n\nconst html = valid\n  ? page(`<h2>Status ändern</h2>\n<p>Anfrage auf <strong>„${LABELS[action]}“</strong> setzen?</p>\n<form method=\"post\" action=\"duraku-status-ok\">\n<input type=\"hidden\" name=\"t\" value=\"${token}\"><input type=\"hidden\" name=\"a\" value=\"${action}\">\n<button type=\"submit\" style=\"padding:12px 24px;font-size:16px;border:0;border-radius:6px;background:#2563eb;color:#fff;cursor:pointer\">Bestätigen</button>\n</form>`)\n  : page('<h2>Ungültiger Link</h2><p>Dieser Link ist unvollständig. Bitte den Button direkt aus der E-Mail verwenden.</p>');\n\nreturn [{ json: { html } }];\n"
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000019",
+      "name": "Seite anzeigen",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        120
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000020",
+      "name": "Status bestätigt",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        420
+      ],
+      "webhookId": "b2f0c002-0000-4000-8000-0000000000bb",
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "duraku-status-ok",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000021",
+      "name": "Anfrage suchen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        420
+      ],
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "duraku_anfragen",
+          "cachedResultName": "duraku_anfragen"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "token",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.t }}"
+            }
+          ]
+        },
+        "limit": 1
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000022",
+      "name": "Status prüfen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        420
+      ],
+      "parameters": {
+        "jsCode": "// n8n Code-Node \"Status prüfen\": prüft den bestätigten Status-Klick gegen die gespeicherte Anfrage.\nconst body = $('Status bestätigt').first().json.body ?? {};\n\nconst LABELS = {\n  angebot: 'Angebot gesendet',\n  auftrag: 'Auftrag erhalten',\n  erledigt: 'Erledigt',\n  abgesagt: 'Abgesagt',\n};\n\nconst token = String(body.t ?? '');\nconst action = String(body.a ?? '');\nconst row = $input\n  .all()\n  .map((item) => item.json)\n  .find((r) => r && r.token && r.token === token);\n\nconst escapeHtml = (s) =>\n  String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\n\nlet changed = false;\nlet title;\nlet text;\nif (!Object.hasOwn(LABELS, action) || !row) {\n  title = 'Link ungültig';\n  text = 'Diese Anfrage wurde nicht gefunden. Bitte den Button direkt aus der E-Mail verwenden.';\n} else if (row.status === action) {\n  title = 'Schon erledigt';\n  text = `Die Anfrage von <strong>${escapeHtml(row.name)}</strong> steht bereits auf „${LABELS[action]}“.`;\n} else {\n  changed = true;\n  title = 'Gespeichert ✓';\n  text = `Die Anfrage von <strong>${escapeHtml(row.name)}</strong> steht jetzt auf „${LABELS[action]}“.`;\n}\n\nconst html = `<!doctype html><html lang=\"de\"><head><meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"robots\" content=\"noindex\">\n<title>${title} – Duraku Glanzservice</title></head>\n<body style=\"font-family:Arial,sans-serif;max-width:420px;margin:48px auto;padding:0 16px;text-align:center;color:#0f172a\">\n<h2>${title}</h2><p>${text}</p><p style=\"color:#64748b\">Dieses Fenster kann geschlossen werden.</p></body></html>`;\n\nreturn [{ json: { changed, token, status: action, statusAt: new Date().toISOString(), html } }];\n"
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000024",
+      "name": "Änderung nötig?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c0000002-0000-4000-8000-000000000023",
+              "leftValue": "={{ $json.changed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000025",
+      "name": "Status speichern",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        340
+      ],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "duraku_anfragen",
+          "cachedResultName": "duraku_anfragen"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "token",
+              "condition": "eq",
+              "keyValue": "={{ $json.token }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "statusAt": "={{ $json.statusAt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "statusAt",
+              "displayName": "statusAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000026",
+      "name": "Fehler anzeigen",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        240
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "<!doctype html><html lang=\"de\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Fehler</title></head><body style=\"font-family:Arial,sans-serif;max-width:420px;margin:48px auto;padding:0 16px;text-align:center\"><h2>Nicht gespeichert</h2><p>Der Status konnte gerade nicht gespeichert werden. Bitte in ein paar Minuten erneut auf den Button in der E-Mail klicken.</p></body></html>",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000027",
+      "name": "Ergebnis anzeigen",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        420
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $('Status prüfen').item.json.html }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": "b2f0c002-0000-4000-8000-000000000028",
+      "name": "Hinweis",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        -140
+      ],
+      "parameters": {
+        "width": 600,
+        "height": 200,
+        "content": "## Status-Buttons\nKlick in der Mail → Bestätigungsseite (GET) → „Bestätigen“ (POST) → Status speichern.\nDer Zwischenschritt verhindert, dass Link-Scanner von Mailprogrammen den Status ändern.\n\nEinfach aktivieren – keine Zugangsdaten nötig."
+      }
+    }
+  ],
+  "connections": {
+    "Status-Link geklickt": {
+      "main": [
+        [
+          {
+            "node": "Bestätigungsseite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bestätigungsseite": {
+      "main": [
+        [
+          {
+            "node": "Seite anzeigen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status bestätigt": {
+      "main": [
+        [
+          {
+            "node": "Anfrage suchen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anfrage suchen": {
+      "main": [
+        [
+          {
+            "node": "Status prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status prüfen": {
+      "main": [
+        [
+          {
+            "node": "Änderung nötig?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Änderung nötig?": {
+      "main": [
+        [
+          {
+            "node": "Status speichern",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ergebnis anzeigen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status speichern": {
+      "main": [
+        [
+          {
+            "node": "Ergebnis anzeigen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fehler anzeigen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Vienna",
+    "saveDataErrorExecution": "all"
+  },
+  "pinData": {}
+}
