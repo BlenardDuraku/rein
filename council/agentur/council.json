@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "title": "Solo-KI-Automatisierungsagentur starten",
+  "slug": "solo-agentur",
+  "dossier": 1,
+  "date": "2026-10-17",
+  "mode": "single",
+  "seats": [
+    {
+      "id": "contrarian",
+      "title": "Skeptischer Gr\u00fcndungsberater (Contrarian)",
+      "group": "Kritiker",
+      "weight": 1
+    },
+    {
+      "id": "kmu-chef",
+      "title": "Gesch\u00e4ftsf\u00fchrer eines KMU in O\u00d6 (Zielkunde)",
+      "group": "Kunden",
+      "weight": 2.0
+    },
+    {
+      "id": "automation-dev",
+      "title": "Erfahrener Automatisierungs-Entwickler",
+      "group": "Experten",
+      "weight": 1
+    },
+    {
+      "id": "solo-founder",
+      "title": "Solo-Gr\u00fcnder mit eigener Automatisierungsagentur",
+      "group": "Experten",
+      "weight": 1
+    },
+    {
+      "id": "risk-finance",
+      "title": "Steuerberater und Risiko (Haftung, DSGVO)",
+      "group": "Aufsicht",
+      "weight": 1
+    },
+    {
+      "id": "client-employee",
+      "title": "B\u00fcromitarbeiterin beim Kunden (Nutzerin)",
+      "group": "Kunden",
+      "weight": 1
+    }
+  ]
+}
