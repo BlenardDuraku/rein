@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "title": "High-End B\u00fcrokratie-Workflow f\u00fcr Tierarztpraxen",
+  "slug": "vet-workflow",
+  "dossier": 1,
+  "date": "2026-10-17",
+  "mode": "single",
+  "seats": [
+    {
+      "id": "contrarian",
+      "title": "Skeptischer Produktberater (Scope-Kritiker)",
+      "group": "Kritiker",
+      "weight": 1
+    },
+    {
+      "id": "praxisinhaber",
+      "title": "Inhaberin einer Kleintierpraxis (K\u00e4uferin)",
+      "group": "Kunden",
+      "weight": 2.0
+    },
+    {
+      "id": "tfa",
+      "title": "Tiermedizinische Fachangestellte / Ordinationsassistenz",
+      "group": "Kunden",
+      "weight": 1
+    },
+    {
+      "id": "nutztier-ta",
+      "title": "Gemischt-/Nutztierpraktiker",
+      "group": "Kunden",
+      "weight": 1
+    },
+    {
+      "id": "pvs-anbieter",
+      "title": "Etablierter Praxissoftware-Anbieter (Wettbewerber-Archetyp)",
+      "group": "Wettbewerb",
+      "weight": 1
+    },
+    {
+      "id": "recht",
+      "title": "Datenschutz- und Tierarzneimittelrecht-Experte",
+      "group": "Aufsicht",
+      "weight": 1
+    },
+    {
+      "id": "tierhalter",
+      "title": "Tierhalterin (Endkundin der Praxis)",
+      "group": "Kunden",
+      "weight": 1
+    }
+  ]
+}
