@@ -37,3 +37,7 @@ Inhalte geliefert und freigegeben hat.
 - Q1–Q4-Regler erklärt die Oberflächenqualität im Streiflicht.
 - Schrift „Archivo“ (SIL Open Font License, `fonts/OFL.txt`) liegt lokal – keine Verbindung zu Google Fonts.
 - Keine Cookies, kein Tracking, keine externen Abhängigkeiten.
+
+## Vorschau als Einzeldatei
+
+`python3 huba-trockenbau/vorschau-erzeugen.py` erzeugt `huba-trockenbau-vorschau.html` – eine Datei mit allem drin, die man verschicken und ohne Server öffnen kann.
