@@ -41,3 +41,14 @@ Inhalte geliefert und freigegeben hat.
 ## Vorschau als Einzeldatei
 
 `python3 huba-trockenbau/vorschau-erzeugen.py` erzeugt `huba-trockenbau-vorschau.html` – eine Datei mit allem drin, die man verschicken und ohne Server öffnen kann.
+
+## Reel „Q1 bis Q4 erklärt“ (`reel/`)
+
+15-Sekunden-Video im Hochformat (1080×1920) für Instagram, Facebook und TikTok, gebaut mit
+[HyperFrames](https://github.com/heygen-com/hyperframes). Ohne Ton – Musik am besten direkt in der
+Instagram-App wählen (dort lizenziert).
+
+- Telefonnummer eintragen: in `reel/index.html` den Platzhalter `[Telefonnummer]` ersetzen.
+- Prüfen: `cd huba-trockenbau/reel && npm run check`
+- Rendern: `npx hyperframes render -o huba-q-stufen-reel.mp4` (ca. 35 Sekunden)
+- GSAP und Schrift liegen in `reel/assets/`, das Rendern braucht kein Internet.
