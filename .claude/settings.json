@@ -1,0 +1,20 @@
+{
+  "extraKnownMarketplaces": {
+    "n8n-mcp-skills": {
+      "source": {
+        "source": "github",
+        "repo": "czlonkowski/n8n-skills"
+      }
+    },
+    "hyperframes": {
+      "source": {
+        "source": "github",
+        "repo": "heygen-com/hyperframes"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "n8n-mcp-skills@n8n-mcp-skills": true,
+    "hyperframes@hyperframes": true
+  }
+}
