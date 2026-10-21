@@ -95,23 +95,23 @@ Kein Sitz ohne eigenen Beitrag.
 
 "Other" is always allowed.
 
-- **A. „Messen, dann eng bauen“.**
+- **A.** **„Messen, dann eng bauen“.**
   - *Inhalt:* 2–4 Wochen. Benchmark der nativen Funktion im aktuellen SolidWorks-Release (2027, siehe 01A item 1) an 20–30 echten Teilen einer Teilefamilie von 2–3 KMU, mit Firmenvorlage. Gemessen werden die Zeit für Erzeugen + Prüfen + Korrigieren sowie die Fehler, klassifiziert als laut oder leise und nach Art (Stil/Norm, Formmaß, Funktion/Toleranz, PDM). Parallel 5–10 Gespräche mit Konstruktionsleitern und IT-Leitern.
   - *Danach:* Die Schwellen werden vorab festgelegt. Zeigt sich eine Lücke, folgt ein Spike von 3–4 Wochen: SolidWorks, eine Teilefamilie, regelbasiert, markierender Assistent, lokal, keine Toleranzen. Zeigt sich keine Lücke, folgt E.
   - *Backed in Round 1 by (sinngemäß):* konstruktionsleiter, zeichner, qs-normen, cad-entwickler, cad-hersteller.
   - *Cost:* wenig Geld. Man braucht Zugang zu Firmen und einer aktuellen Lizenz.
   - *Main risk:* Eine gemessene Lücke wird mit Zahlungsbereitschaft verwechselt. Der Spike startet ohne Zahlungszusage.
-- **B. „Erst Geld, dann Bau“ (strongest dissent).**
+- **B.** **„Erst Geld, dann Bau“ (strongest dissent).**
   - *Inhalt:* 10 Gespräche mit Konstruktionsleitern, die die native Funktion kennen. In jedem wird ein bezahlter 2-Wochen-Pilot an 30 eigenen Teilen zu einem konkreten Preis (3–5 kEUR) angeboten. Der Benchmark findet nur *innerhalb* bezahlter Piloten statt. Gebaut wird nur bei ≥ 3 Zusagen, bei 0–1 Zusagen folgt E.
   - *Backed by:* investor.
   - *Cost:* nahe null außer Zeit.
   - *Main risk:* Ohne vorherigen eigenen Test hat der Gründer nichts Konkretes zu verkaufen. Gute Ideen fallen dann durch, weil das Angebot zu vage ist.
-- **C. „Daten zuerst“.**
+- **C.** **„Daten zuerst“.**
   - *Inhalt:* Gespräche mit IT-Pflichtteil, dann ein einseitiges Datenfluss-Konzept (lokal vs. EU-Instanz, getrenntes Lernen pro Kunde). Benchmark und Code kommen erst, wenn die Architektur-Vorgabe feststeht. Positioniert wird mit Datensouveränität gegen die cloudgebundene native Funktion.
   - *Backed by:* it-datenschutz.
   - *Cost:* gering.
   - *Main risk:* Es wird auf ein Unterscheidungsmerkmal optimiert, das Kunden möglicherweise egal ist (≥ 4/6 IT-Leiter akzeptieren die Cloud).
-- **D. „Nicht bauen (E)“.**
+- **D.** **„Nicht bauen (E)“.**
   - *Inhalt:* Die Idee wird jetzt geparkt. Die Hersteller schließen die Lücke ohnehin, die Ressourcen gehen anderswohin.
   - *Backed by:* in Runde 1 niemand als ersten Schritt. Mehrere Sitze nennen E aber als vorab festgelegtes Ergebnis bei bestimmten Messwerten.
   - *Cost:* Opportunitätskosten, falls die Lücke real ist.
