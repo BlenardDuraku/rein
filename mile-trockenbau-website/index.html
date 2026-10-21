@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="de-AT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mile Trockenbau GmbH – Ihr Spezialist in Sachen Trockenbausysteme</title>
+<meta name="description" content="Mile Trockenbau GmbH, Leonding: Trockenbau, Ständerwände, Brandschutzwände, Akustische Decke, Innenausbau.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..800;1,62..125,300..800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f7f7;
+    --board: #eceff0;
+    --ink: #1a1d21;
+    --ink-soft: #4d545b;
+    --steel: #8f9aa4;
+    --steel-light: #d3d8dc;
+    --red: #d6342c;        /* Logo-Rot */
+    --red-dark: #b0261f;
+    --gutter: clamp(16px, 4vw, 48px);
+    --max: 1240px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Archivo", system-ui, sans-serif;
+    font-variation-settings: "wdth" 100;
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
+
+  /* Kopfzeile */
+  .site-head {
+    position: sticky; top: 0; z-index: 10;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--steel-light);
+  }
+  .site-head .wrap { display: flex; align-items: center; gap: 24px; height: 72px; }
+  .logo { text-decoration: none; display: flex; flex-direction: column; line-height: 1; }
+  .logo b {
+    font-style: italic; font-variation-settings: "wdth" 125; font-weight: 800;
+    font-size: 30px; letter-spacing: -0.02em; color: var(--red);
+  }
+  .logo small {
+    font-variation-settings: "wdth" 125; font-weight: 700; font-size: 10.5px;
+    letter-spacing: .04em; margin-top: 3px;
+  }
+  .nav { margin-left: auto; display: flex; gap: 28px; align-items: center; }
+  .nav a { text-decoration: none; font-size: 15px; }
+  .nav a:hover { color: var(--red); }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 12px 20px; border-radius: 2px; border: 2px solid var(--red);
+    font: inherit; font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer;
+    background: var(--red); color: #fff;
+  }
+  .btn:hover { background: var(--red-dark); border-color: var(--red-dark); }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--ink); }
+  .btn.ghost:hover { background: var(--ink); color: #fff; }
+  .menu-toggle { display: none; margin-left: auto; background: none; border: 0; font: inherit; font-weight: 600; padding: 8px; cursor: pointer; }
+
+  /* Hero */
+  .hero { padding: clamp(40px, 7vw, 88px) 0 0; }
+  .hero-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 48px; align-items: end; }
+  h1 { margin: 0; line-height: 0.98; letter-spacing: -0.02em; }
+  h1 .greet {
+    display: block; margin-bottom: 14px;
+    font-variation-settings: "wdth" 62; font-weight: 400; font-size: clamp(26px, 3.4vw, 42px); letter-spacing: 0;
+  }
+  h1 .main {
+    display: block;
+    font-variation-settings: "wdth" 125; font-weight: 800; font-size: clamp(38px, 6.2vw, 84px); letter-spacing: -0.03em;
+  }
+  .hero-side p { margin: 0 0 24px; font-size: 18px; color: var(--ink-soft); max-width: 40ch; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+  .wall { margin-top: clamp(32px, 5vw, 56px); border-bottom: 2px solid var(--ink); }
+  .wall svg { width: 100%; height: auto; display: block; }
+
+  /* Wand-Animation: einmal beim Laden */
+  .stud, .track { animation: drop .5s cubic-bezier(.2,.7,.2,1) both; }
+  .stud { animation-delay: calc(.35s + var(--i) * .09s); }
+  .insul { animation: fade .6s ease-out 1.15s both; }
+  .board { animation: slide .6s cubic-bezier(.2,.7,.2,1) both; animation-delay: calc(1.55s + var(--i) * .18s); }
+  .screw { animation: fade .3s ease-out 2.3s both; }
+  .dim { animation: fade .5s ease-out 2.5s both; }
+  @keyframes drop { from { transform: translateY(-24px); opacity: 0; } }
+  @keyframes fade { from { opacity: 0; } }
+  @keyframes slide { from { transform: translateX(60px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; }
+  }
+
+  /* Abschnitte */
+  section.block { padding: clamp(64px, 9vw, 120px) 0; scroll-margin-top: 72px; }
+  section.block + section.block { border-top: 1px solid var(--steel-light); }
+  .split { display: grid; grid-template-columns: 1fr 1.4fr; gap: 64px; align-items: start; }
+  h2 {
+    margin: 0;
+    font-variation-settings: "wdth" 115; font-weight: 750;
+    font-size: clamp(32px, 4.4vw, 56px); line-height: 1; letter-spacing: -0.02em;
+  }
+  .text p { margin: 0 0 18px; max-width: 62ch; font-size: 19px; }
+  .text p:last-child { margin-bottom: 0; }
+
+  /* Leistungen */
+  .services { list-style: none; margin: 40px 0 0; padding: 0; border-top: 2px solid var(--ink); }
+  .services li {
+    display: flex; align-items: baseline; gap: 20px;
+    padding: 18px 0; border-bottom: 1px solid var(--steel-light);
+    font-variation-settings: "wdth" 110; font-weight: 650; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.2;
+  }
+  .services li::before {
+    content: ""; flex: none; width: 14px; height: 14px; background: var(--red); transform: translateY(-2px);
+  }
+
+  /* Kontakt */
+  .contact-list { margin: 32px 0 0; padding: 0; list-style: none; border-top: 2px solid var(--ink); }
+  .contact-list li { padding: 14px 0; border-bottom: 1px solid var(--steel-light); }
+  .contact-list .k { display: block; font-size: 14px; color: var(--ink-soft); }
+  .contact-list a, .contact-list .v { font-size: 20px; font-weight: 600; text-decoration: none; }
+  .contact-list a:hover { color: var(--red); }
+  form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .field { display: grid; gap: 6px; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 14px; font-weight: 600; }
+  input, select, textarea {
+    font: inherit; font-size: 16px; color: var(--ink);
+    padding: 12px 14px; border: 1.5px solid var(--steel); border-radius: 2px; background: #fff; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red); box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 20%, transparent); }
+  textarea { min-height: 140px; resize: vertical; }
+  .form-status { grid-column: 1 / -1; margin: 0; font-weight: 600; color: var(--red); min-height: 1.5em; }
+
+  /* Fußzeile im Stil der Visitenkarte */
+  footer { margin-top: 0; }
+  .sig { border-top: 1px solid var(--steel-light); }
+  .sig .wrap { display: flex; align-items: baseline; gap: 10px; padding-top: 18px; padding-bottom: 14px; }
+  .sig b { font-style: italic; font-variation-settings: "wdth" 125; font-weight: 800; font-size: clamp(22px, 3vw, 32px); }
+  .sig span { font-style: italic; font-weight: 700; font-size: 14px; color: var(--ink-soft); }
+  .card { background: var(--red); color: #fff; }
+  .card .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; padding-top: 32px; padding-bottom: 40px; }
+  .card p { margin: 0; font-weight: 600; line-height: 1.7; }
+  .card a { text-decoration: none; }
+  .card a:hover { text-decoration: underline; }
+
+  /* Responsiv */
+  @media (max-width: 960px) {
+    .hero-grid, .split { grid-template-columns: 1fr; gap: 28px; }
+  }
+  @media (max-width: 760px) {
+    .menu-toggle { display: block; }
+    .nav {
+      display: none; position: absolute; top: 72px; left: 0; right: 0;
+      flex-direction: column; align-items: flex-start; gap: 0;
+      background: var(--paper); border-bottom: 2px solid var(--ink); padding: 8px var(--gutter) 20px;
+    }
+    .nav.open { display: flex; }
+    .nav a { padding: 12px 0; font-size: 17px; width: 100%; }
+    .nav .btn { margin-top: 8px; width: auto; padding: 12px 20px; }
+    form { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="logo" href="#home" aria-label="Mile Trockenbau GmbH, zur Startseite"><b>MILE</b><small>TROCKENBAU GmbH</small></a>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="nav">Menü</button>
+    <nav class="nav" id="nav">
+      <a href="#home">Home</a>
+      <a href="#ueber-uns">Über uns</a>
+      <a href="#trockenbau">Trockenbau</a>
+      <a href="#referenzen">Referenzen</a>
+      <a class="btn" href="#kontakt">Kontakt</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="home">
+    <div class="wrap">
+      <div class="hero-grid">
+        <h1><span class="greet">Herzlich Willkommen bei Mile Trockenbau,</span><span class="main">Ihrem Spezialisten in Sachen Trockenbau&shy;systeme.</span></h1>
+        <div class="hero-side">
+          <p>Langjährige Erfahrung und spezifisches Know-How zeichnen unser Team aus, wenn es um eine erfolgreiche Umsetzung Ihrer Vorstellungen geht. Wir sind gerne bei der Realisierung Ihres Bauvorhabens behilflich.</p>
+          <div class="hero-actions">
+            <a class="btn" href="#kontakt">Kontakt</a>
+            <a class="btn ghost" href="tel:+436765513720">+43 (0) 676 55 13 720</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="wall" aria-hidden="true">
+        <svg viewBox="0 0 1200 420">
+          <defs>
+            <pattern id="wool" width="40" height="24" patternUnits="userSpaceOnUse">
+              <rect width="40" height="24" fill="#f1dc9c"/>
+              <path d="M0 12 Q10 0 20 12 T40 12" fill="none" stroke="#d4b04f" stroke-width="2"/>
+            </pattern>
+          </defs>
+          <rect class="track" x="40" y="30" width="1120" height="12" fill="#8f9aa4"/>
+          <rect class="track" x="40" y="398" width="1120" height="12" fill="#8f9aa4"/>
+          <g class="insul">
+            <rect x="366" y="42" width="164" height="356" fill="url(#wool)"/>
+            <rect x="522" y="42" width="164" height="356" fill="url(#wool)"/>
+            <rect x="678" y="42" width="164" height="356" fill="url(#wool)"/>
+          </g>
+          <g fill="#aeb7bf" stroke="#7d8892" stroke-width="1.5">
+            <rect class="stud" style="--i:0" x="52"   y="42" width="14" height="356"/>
+            <rect class="stud" style="--i:1" x="208"  y="42" width="14" height="356"/>
+            <rect class="stud" style="--i:2" x="364"  y="42" width="14" height="356"/>
+            <rect class="stud" style="--i:3" x="520"  y="42" width="14" height="356"/>
+            <rect class="stud" style="--i:4" x="676"  y="42" width="14" height="356"/>
+            <rect class="stud" style="--i:5" x="832"  y="42" width="14" height="356"/>
+            <rect class="stud" style="--i:6" x="988"  y="42" width="14" height="356"/>
+            <rect class="stud" style="--i:7" x="1144" y="42" width="14" height="356"/>
+          </g>
+          <g class="board" style="--i:0"><rect x="839" y="30" width="156" height="380" fill="#eceff0" stroke="#b9c1c8"/></g>
+          <g class="board" style="--i:1"><rect x="995" y="30" width="165" height="380" fill="#eceff0" stroke="#b9c1c8"/></g>
+          <g class="screw" fill="#5b6670">
+            <circle cx="846" cy="70" r="2.5"/><circle cx="846" cy="140" r="2.5"/><circle cx="846" cy="210" r="2.5"/><circle cx="846" cy="280" r="2.5"/><circle cx="846" cy="350" r="2.5"/>
+            <circle cx="995" cy="70" r="2.5"/><circle cx="995" cy="140" r="2.5"/><circle cx="995" cy="210" r="2.5"/><circle cx="995" cy="280" r="2.5"/><circle cx="995" cy="350" r="2.5"/>
+            <circle cx="1151" cy="70" r="2.5"/><circle cx="1151" cy="140" r="2.5"/><circle cx="1151" cy="210" r="2.5"/><circle cx="1151" cy="280" r="2.5"/><circle cx="1151" cy="350" r="2.5"/>
+          </g>
+          <g class="dim" stroke="#d6342c" stroke-width="1.2" fill="#d6342c" font-family="Archivo" font-size="13">
+            <line x1="59" y1="14" x2="215" y2="14"/>
+            <line x1="59" y1="8" x2="59" y2="20"/>
+            <line x1="215" y1="8" x2="215" y2="20"/>
+            <text x="137" y="10" text-anchor="middle" stroke="none">62,5 cm</text>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="ueber-uns">
+    <div class="wrap split">
+      <h2>Über uns</h2>
+      <div class="text">
+        <p>Die Aufgabenbereiche von Mile Trockenbau sind vielfältig und umfassen Ausbauarbeiten jeglicher Art. Das Zusammenspiel unserer verschiedenen Professionisten ermöglicht einen reibungslosen Ablauf. Nach einer erfolgreichen Planung im Vorfeld steht einer schnellen Abwicklung Ihres Bauvorhabens nichts mehr im Wege.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="trockenbau">
+    <div class="wrap split">
+      <h2>Trockenbau</h2>
+      <div class="text">
+        <p>Wir übernehmen den Innenausbau Ihrer Räumlichkeiten, treffen schalldämmende oder akustische Maßnahmen, sorgen für Brand- und Wärmeschutz in Trockenbauweise und setzen gestalterische Wünsche um. Unsere Handwerker sind topgeschult, kennen sich mit den unterschiedlichen Trockenbaustoffen und ihren speziellen Eigenschaften aus und sorgen so für ein optimales Zusammenspiel.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="referenzen">
+    <div class="wrap split">
+      <h2>Referenzen</h2>
+      <div class="text">
+        <p>Mile Trockenbau steht für Zuverlässigkeit, Qualität und eine hochwertige Ausführung unserer kompetenten Fachkräfte. Kontaktieren Sie uns und lassen Sie sich bei Ihrem geplanten Innenausbau beraten. Wir freuen uns auf Sie und stimmen sämtliche Trockenbauarbeiten gerne auf Ihre Bedürfnisse ab.</p>
+        <ul class="services">
+          <li>Trockenbau</li>
+          <li>Ständerwände</li>
+          <li>Brandschutzwände</li>
+          <li>Akustische Decke</li>
+          <li>Innenausbau</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="kontakt">
+    <div class="wrap split">
+      <div>
+        <h2>Kontakt</h2>
+        <ul class="contact-list">
+          <li><span class="k">Adresse</span><a href="https://www.google.com/maps/search/?api=1&query=Bruno-Gallee-Weg+12,+4060+Leonding" target="_blank" rel="noopener">Bruno-Gallee-Weg 12/3<br>4060 Leonding</a></li>
+          <li><span class="k">Mob.</span><a href="tel:+436765513720">+43 (0) 676 55 13 720</a></li>
+          <li><span class="k">Fax</span><span class="v">+43 (0) 732 / 20 71 22</span></li>
+          <li><span class="k">Mail</span><a href="mailto:office@mile-trockenbau.at">office@mile-trockenbau.at</a></li>
+        </ul>
+      </div>
+      <form id="anfrage" novalidate>
+        <div class="field"><label for="f-name">Name</label><input id="f-name" name="name" autocomplete="name" required></div>
+        <div class="field"><label for="f-tel">Telefon</label><input id="f-tel" name="telefon" type="tel" autocomplete="tel"></div>
+        <div class="field full"><label for="f-mail">E-Mail</label><input id="f-mail" name="email" type="email" autocomplete="email" required></div>
+        <div class="field full">
+          <label for="f-art">Thema</label>
+          <select id="f-art" name="art">
+            <option>Trockenbau</option>
+            <option>Ständerwände</option>
+            <option>Brandschutzwände</option>
+            <option>Akustische Decke</option>
+            <option>Innenausbau</option>
+          </select>
+        </div>
+        <div class="field full"><label for="f-msg">Nachricht</label><textarea id="f-msg" name="nachricht"></textarea></div>
+        <div><button class="btn" type="submit">Nachricht senden</button></div>
+        <p class="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="sig"><div class="wrap"><b>Mile Malesevic</b><span>GF</span></div></div>
+  <div class="card">
+    <div class="wrap">
+      <p>Bruno-Gallee-Weg 12/3<br>4060 Leonding<br>Mob.: <a href="tel:+436765513720">+43 (0) 676 55 13 720</a><br>Fax: +43 (0) 732 / 20 71 22<br>Mail: <a href="mailto:office@mile-trockenbau.at">office@mile-trockenbau.at</a></p>
+      <p>www.mile-trockenbau.at</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const toggle = document.querySelector('.menu-toggle');
+  const nav = document.getElementById('nav');
+  toggle.addEventListener('click', () => {
+    const open = nav.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', open);
+    toggle.textContent = open ? 'Schließen' : 'Menü';
+  });
+  nav.addEventListener('click', e => {
+    if (e.target.tagName === 'A') { nav.classList.remove('open'); toggle.setAttribute('aria-expanded', false); toggle.textContent = 'Menü'; }
+  });
+
+  const form = document.getElementById('anfrage');
+  const status = form.querySelector('.form-status');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    const d = new FormData(form);
+    if (!d.get('name').trim() || !d.get('email').trim() || !form.email.checkValidity()) {
+      status.textContent = 'Bitte Name und eine gültige E-Mail-Adresse eintragen.';
+      return;
+    }
+    const body = `Name: ${d.get('name')}\nTelefon: ${d.get('telefon')}\nE-Mail: ${d.get('email')}\nThema: ${d.get('art')}\n\n${d.get('nachricht')}`;
+    location.href = `mailto:office@mile-trockenbau.at?subject=${encodeURIComponent('Anfrage: ' + d.get('art'))}&body=${encodeURIComponent(body)}`;
+    status.textContent = 'Ihr E-Mail-Programm wurde geöffnet. Bitte dort auf Senden klicken.';
+  });
+</script>
+</body>
+</html>
