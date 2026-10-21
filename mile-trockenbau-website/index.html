@@ -3,22 +3,21 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mile Trockenbau – Trockenbau in Leonding und Oberösterreich</title>
-<meta name="description" content="Mile Trockenbau GmbH aus Leonding: Trennwände, Brandschutz, abgehängte Decken, Akustikdecken und Dachgeschossausbau in ganz Oberösterreich.">
+<title>Mile Trockenbau GmbH – Ihr Spezialist in Sachen Trockenbausysteme</title>
+<meta name="description" content="Mile Trockenbau GmbH, Leonding: Trockenbau, Ständerwände, Brandschutzwände, Akustische Decke, Innenausbau.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..800;1,62..125,300..800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --board: #eef1f2;      /* Gipskarton-Oberfläche */
-    --paper: #f7f8f8;
-    --ink: #17202a;        /* Planfarbe */
-    --ink-soft: #4a5560;
-    --steel: #8f9aa4;      /* verzinktes Profil */
-    --steel-light: #cfd5da;
-    --blue: #2356a6;       /* Aufdruck Standardplatte */
-    --red: #c3322a;        /* Aufdruck Brandschutzplatte */
-    --wool: #e6c76a;       /* Mineralwolle */
+    --paper: #f6f7f7;
+    --board: #eceff0;
+    --ink: #1a1d21;
+    --ink-soft: #4d545b;
+    --steel: #8f9aa4;
+    --steel-light: #d3d8dc;
+    --red: #d6342c;        /* Logo-Rot */
+    --red-dark: #b0261f;
     --gutter: clamp(16px, 4vw, 48px);
     --max: 1240px;
   }
@@ -31,12 +30,11 @@
     font-family: "Archivo", system-ui, sans-serif;
     font-variation-settings: "wdth" 100;
     font-size: 17px;
-    line-height: 1.55;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
-  img { max-width: 100%; display: block; }
   a { color: inherit; }
-  :focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+  :focus-visible { outline: 3px solid var(--red); outline-offset: 3px; }
   .wrap { max-width: var(--max); margin: 0 auto; padding: 0 var(--gutter); }
 
   /* Kopfzeile */
@@ -46,36 +44,43 @@
     backdrop-filter: blur(8px);
     border-bottom: 1px solid var(--steel-light);
   }
-  .site-head .wrap { display: flex; align-items: center; gap: 24px; height: 68px; }
-  .logo {
-    text-decoration: none; display: flex; align-items: baseline; gap: 8px;
-    font-variation-settings: "wdth" 125; font-weight: 800; font-size: 22px; letter-spacing: -0.01em;
+  .site-head .wrap { display: flex; align-items: center; gap: 24px; height: 72px; }
+  .logo { text-decoration: none; display: flex; flex-direction: column; line-height: 1; }
+  .logo b {
+    font-style: italic; font-variation-settings: "wdth" 125; font-weight: 800;
+    font-size: 30px; letter-spacing: -0.02em; color: var(--red);
   }
-  .logo small { font-variation-settings: "wdth" 100; font-weight: 400; font-size: 14px; color: var(--ink-soft); }
+  .logo small {
+    font-variation-settings: "wdth" 125; font-weight: 700; font-size: 10.5px;
+    letter-spacing: .04em; margin-top: 3px;
+  }
   .nav { margin-left: auto; display: flex; gap: 28px; align-items: center; }
   .nav a { text-decoration: none; font-size: 15px; }
-  .nav a:hover { color: var(--blue); }
+  .nav a:hover { color: var(--red); }
   .btn {
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    padding: 12px 20px; border-radius: 2px; border: 2px solid var(--ink);
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 12px 20px; border-radius: 2px; border: 2px solid var(--red);
     font: inherit; font-weight: 600; font-size: 15px; text-decoration: none; cursor: pointer;
-    background: var(--ink); color: var(--paper);
+    background: var(--red); color: #fff;
   }
-  .btn:hover { background: var(--blue); border-color: var(--blue); }
-  .btn.ghost { background: transparent; color: var(--ink); }
-  .btn.ghost:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .btn:hover { background: var(--red-dark); border-color: var(--red-dark); }
+  .btn.ghost { background: transparent; color: var(--ink); border-color: var(--ink); }
+  .btn.ghost:hover { background: var(--ink); color: #fff; }
   .menu-toggle { display: none; margin-left: auto; background: none; border: 0; font: inherit; font-weight: 600; padding: 8px; cursor: pointer; }
 
   /* Hero */
   .hero { padding: clamp(40px, 7vw, 88px) 0 0; }
-  .hero-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px; align-items: end; }
-  h1 {
-    margin: 0;
-    font-variation-settings: "wdth" 125; font-weight: 800;
-    font-size: clamp(40px, 7.2vw, 96px); line-height: 0.95; letter-spacing: -0.03em;
+  .hero-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 48px; align-items: end; }
+  h1 { margin: 0; line-height: 0.98; letter-spacing: -0.02em; }
+  h1 .greet {
+    display: block; margin-bottom: 14px;
+    font-variation-settings: "wdth" 62; font-weight: 400; font-size: clamp(26px, 3.4vw, 42px); letter-spacing: 0;
   }
-  h1 span { display: block; font-variation-settings: "wdth" 62; font-weight: 300; letter-spacing: -0.01em; }
-  .hero-side p { margin: 0 0 24px; font-size: 19px; color: var(--ink-soft); max-width: 36ch; }
+  h1 .main {
+    display: block;
+    font-variation-settings: "wdth" 125; font-weight: 800; font-size: clamp(38px, 6.2vw, 84px); letter-spacing: -0.03em;
+  }
+  .hero-side p { margin: 0 0 24px; font-size: 18px; color: var(--ink-soft); max-width: 40ch; }
   .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
   .wall { margin-top: clamp(32px, 5vw, 56px); border-bottom: 2px solid var(--ink); }
   .wall svg { width: 100%; height: auto; display: block; }
@@ -95,81 +100,34 @@
   }
 
   /* Abschnitte */
-  section.block { padding: clamp(64px, 9vw, 120px) 0; }
+  section.block { padding: clamp(64px, 9vw, 120px) 0; scroll-margin-top: 72px; }
   section.block + section.block { border-top: 1px solid var(--steel-light); }
+  .split { display: grid; grid-template-columns: 1fr 1.4fr; gap: 64px; align-items: start; }
   h2 {
-    margin: 0 0 16px;
-    font-variation-settings: "wdth" 112; font-weight: 750;
-    font-size: clamp(30px, 4.2vw, 52px); line-height: 1.02; letter-spacing: -0.02em;
+    margin: 0;
+    font-variation-settings: "wdth" 115; font-weight: 750;
+    font-size: clamp(32px, 4.4vw, 56px); line-height: 1; letter-spacing: -0.02em;
   }
-  .lead { margin: 0; max-width: 58ch; color: var(--ink-soft); font-size: 18px; }
-  .section-head { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: end; margin-bottom: 48px; }
+  .text p { margin: 0 0 18px; max-width: 62ch; font-size: 19px; }
+  .text p:last-child { margin-bottom: 0; }
 
-  /* Leistungen als Plattenliste */
-  .services { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ink); }
+  /* Leistungen */
+  .services { list-style: none; margin: 40px 0 0; padding: 0; border-top: 2px solid var(--ink); }
   .services li {
-    display: grid; grid-template-columns: 120px minmax(0, 1fr) minmax(0, 1.3fr); gap: 32px;
-    padding: 28px 0; border-bottom: 1px solid var(--steel-light); align-items: baseline;
+    display: flex; align-items: baseline; gap: 20px;
+    padding: 18px 0; border-bottom: 1px solid var(--steel-light);
+    font-variation-settings: "wdth" 110; font-weight: 650; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.2;
   }
-  .stamp {
-    justify-self: start;
-    font-variation-settings: "wdth" 62; font-weight: 700; font-size: 15px; letter-spacing: .02em;
-    color: var(--blue); border: 1.5px solid currentColor; padding: 2px 8px; border-radius: 2px;
+  .services li::before {
+    content: ""; flex: none; width: 14px; height: 14px; background: var(--red); transform: translateY(-2px);
   }
-  .stamp.fire { color: var(--red); }
-  .services h3 { margin: 0; font-variation-settings: "wdth" 100; font-weight: 650; font-size: 22px; line-height: 1.2; }
-  .services p { margin: 0; color: var(--ink-soft); max-width: 60ch; }
-  .legend { margin-top: 20px; font-size: 14px; color: var(--ink-soft); max-width: 70ch; }
-
-  /* Ablauf */
-  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; counter-reset: step; }
-  .steps li { counter-increment: step; padding: 0 20px 0 0; border-left: 2px solid var(--ink); padding-left: 16px; }
-  .steps li::before {
-    content: counter(step); display: block;
-    font-variation-settings: "wdth" 125; font-weight: 800; font-size: 44px; line-height: 1; color: var(--steel); margin-bottom: 16px;
-  }
-  .steps h3 { margin: 0 0 6px; font-size: 18px; font-weight: 650; }
-  .steps p { margin: 0; font-size: 15px; color: var(--ink-soft); }
-
-  /* Referenzen */
-  .refs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; }
-  .refs figure { margin: 0; }
-  .refs figure:nth-child(1) { grid-column: span 4; }
-  .refs figure:nth-child(2) { grid-column: span 2; }
-  .refs figure:nth-child(3), .refs figure:nth-child(4), .refs figure:nth-child(5) { grid-column: span 2; }
-  .photo {
-    aspect-ratio: 4 / 3; background: var(--board) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12'%3E%3Cpath d='M0 12L12 0' stroke='%23cfd5da' stroke-width='1'/%3E%3C/svg%3E");
-    display: grid; place-items: center; color: var(--steel); font-size: 14px; overflow: hidden;
-  }
-  .refs figure:nth-child(1) .photo { aspect-ratio: 16 / 9; height: 100%; }
-  .refs figure:nth-child(2) .photo { aspect-ratio: auto; height: 100%; }
-  .photo img { width: 100%; height: 100%; object-fit: cover; }
-  .refs figcaption { padding-top: 10px; font-size: 15px; }
-  .refs figcaption span { color: var(--ink-soft); }
-
-  /* Über uns */
-  .about { display: grid; grid-template-columns: 1.1fr 1fr; gap: 64px; }
-  .about p { margin: 0 0 16px; max-width: 58ch; }
-  .facts { margin: 0; display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid var(--ink); align-self: start; }
-  .facts div { padding: 20px 0; border-bottom: 1px solid var(--steel-light); }
-  .facts div:nth-child(odd) { padding-right: 20px; }
-  .facts dt { font-size: 14px; color: var(--ink-soft); }
-  .facts dd { margin: 4px 0 0; font-variation-settings: "wdth" 112; font-weight: 700; font-size: 24px; line-height: 1.15; }
-
-  /* Jobs */
-  .jobs { background: var(--ink); color: var(--paper); }
-  .jobs .wrap { display: grid; grid-template-columns: 1.4fr 1fr; gap: 40px; align-items: end; }
-  .jobs .lead { color: var(--steel-light); }
-  .jobs .btn { background: var(--paper); color: var(--ink); border-color: var(--paper); }
-  .jobs .btn:hover { background: var(--wool); border-color: var(--wool); }
 
   /* Kontakt */
-  .contact { display: grid; grid-template-columns: 1fr 1.2fr; gap: 64px; }
   .contact-list { margin: 32px 0 0; padding: 0; list-style: none; border-top: 2px solid var(--ink); }
-  .contact-list li { padding: 16px 0; border-bottom: 1px solid var(--steel-light); }
+  .contact-list li { padding: 14px 0; border-bottom: 1px solid var(--steel-light); }
   .contact-list .k { display: block; font-size: 14px; color: var(--ink-soft); }
   .contact-list a, .contact-list .v { font-size: 20px; font-weight: 600; text-decoration: none; }
-  .contact-list a:hover { color: var(--blue); }
+  .contact-list a:hover { color: var(--red); }
   form { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
   .field { display: grid; gap: 6px; }
   .field.full { grid-column: 1 / -1; }
@@ -178,40 +136,37 @@
     font: inherit; font-size: 16px; color: var(--ink);
     padding: 12px 14px; border: 1.5px solid var(--steel); border-radius: 2px; background: #fff; width: 100%;
   }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 20%, transparent); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--red); box-shadow: 0 0 0 3px color-mix(in srgb, var(--red) 20%, transparent); }
   textarea { min-height: 140px; resize: vertical; }
-  .form-note { grid-column: 1 / -1; margin: 0; font-size: 14px; color: var(--ink-soft); }
-  .form-status { grid-column: 1 / -1; margin: 0; font-weight: 600; color: var(--blue); min-height: 1.5em; }
+  .form-status { grid-column: 1 / -1; margin: 0; font-weight: 600; color: var(--red); min-height: 1.5em; }
 
-  /* Fußzeile */
-  footer { border-top: 2px solid var(--ink); padding: 40px 0 56px; font-size: 14px; color: var(--ink-soft); }
-  footer .wrap { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 32px; }
-  footer strong { color: var(--ink); display: block; margin-bottom: 6px; }
-  footer p { margin: 0; }
+  /* Fußzeile im Stil der Visitenkarte */
+  footer { margin-top: 0; }
+  .sig { border-top: 1px solid var(--steel-light); }
+  .sig .wrap { display: flex; align-items: baseline; gap: 10px; padding-top: 18px; padding-bottom: 14px; }
+  .sig b { font-style: italic; font-variation-settings: "wdth" 125; font-weight: 800; font-size: clamp(22px, 3vw, 32px); }
+  .sig span { font-style: italic; font-weight: 700; font-size: 14px; color: var(--ink-soft); }
+  .card { background: var(--red); color: #fff; }
+  .card .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 24px; padding-top: 32px; padding-bottom: 40px; }
+  .card p { margin: 0; font-weight: 600; line-height: 1.7; }
+  .card a { text-decoration: none; }
+  .card a:hover { text-decoration: underline; }
 
   /* Responsiv */
   @media (max-width: 960px) {
-    .hero-grid, .section-head, .about, .contact, .jobs .wrap, footer .wrap { grid-template-columns: 1fr; }
-    .services li { grid-template-columns: 1fr; gap: 10px; }
-    .steps { grid-template-columns: 1fr; gap: 28px; }
-    .refs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .refs figure:nth-child(n) { grid-column: span 1; }
-    .refs figure:nth-child(1) { grid-column: 1 / -1; }
-    .refs figure:nth-child(n) .photo { aspect-ratio: 4 / 3; height: auto; }
+    .hero-grid, .split { grid-template-columns: 1fr; gap: 28px; }
   }
   @media (max-width: 760px) {
     .menu-toggle { display: block; }
     .nav {
-      display: none; position: absolute; top: 68px; left: 0; right: 0;
+      display: none; position: absolute; top: 72px; left: 0; right: 0;
       flex-direction: column; align-items: flex-start; gap: 0;
       background: var(--paper); border-bottom: 2px solid var(--ink); padding: 8px var(--gutter) 20px;
     }
     .nav.open { display: flex; }
     .nav a { padding: 12px 0; font-size: 17px; width: 100%; }
-    .nav .btn { margin-top: 8px; width: auto; }
+    .nav .btn { margin-top: 8px; width: auto; padding: 12px 20px; }
     form { grid-template-columns: 1fr; }
-    .refs { grid-template-columns: minmax(0, 1fr); }
-    .facts { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -219,53 +174,47 @@
 
 <header class="site-head">
   <div class="wrap">
-    <a class="logo" href="#top">MILE <small>Trockenbau GmbH</small></a>
+    <a class="logo" href="#home" aria-label="Mile Trockenbau GmbH, zur Startseite"><b>MILE</b><small>TROCKENBAU GmbH</small></a>
     <button class="menu-toggle" aria-expanded="false" aria-controls="nav">Menü</button>
     <nav class="nav" id="nav">
-      <a href="#leistungen">Leistungen</a>
-      <a href="#ablauf">Ablauf</a>
-      <a href="#referenzen">Referenzen</a>
+      <a href="#home">Home</a>
       <a href="#ueber-uns">Über uns</a>
-      <a class="btn" href="#kontakt">Angebot anfragen</a>
+      <a href="#trockenbau">Trockenbau</a>
+      <a href="#referenzen">Referenzen</a>
+      <a class="btn" href="#kontakt">Kontakt</a>
     </nav>
   </div>
 </header>
 
-<main id="top">
-  <section class="hero">
+<main>
+  <section class="hero" id="home">
     <div class="wrap">
       <div class="hero-grid">
-        <h1>Trockenbau aus Leonding<span>für Wohnung, Büro und Baustelle</span></h1>
+        <h1><span class="greet">Herzlich Willkommen bei Mile Trockenbau,</span><span class="main">Ihrem Spezialisten in Sachen Trockenbau&shy;systeme.</span></h1>
         <div class="hero-side">
-          <p>Wände, Decken und Dachgeschosse in ganz Oberösterreich. Sauber montiert, termingerecht übergeben, seit 2014.</p>
+          <p>Langjährige Erfahrung und spezifisches Know-How zeichnen unser Team aus, wenn es um eine erfolgreiche Umsetzung Ihrer Vorstellungen geht. Wir sind gerne bei der Realisierung Ihres Bauvorhabens behilflich.</p>
           <div class="hero-actions">
-            <a class="btn" href="#kontakt">Angebot anfragen</a>
-            <a class="btn ghost" href="tel:+436765513720">+43 676 5513 720</a>
+            <a class="btn" href="#kontakt">Kontakt</a>
+            <a class="btn ghost" href="tel:+436765513720">+43 (0) 676 55 13 720</a>
           </div>
         </div>
       </div>
 
       <div class="wall" aria-hidden="true">
-        <svg viewBox="0 0 1200 420" role="img">
+        <svg viewBox="0 0 1200 420">
           <defs>
             <pattern id="wool" width="40" height="24" patternUnits="userSpaceOnUse">
               <rect width="40" height="24" fill="#f1dc9c"/>
               <path d="M0 12 Q10 0 20 12 T40 12" fill="none" stroke="#d4b04f" stroke-width="2"/>
             </pattern>
           </defs>
-
-          <!-- Boden- und Deckenprofil (UW) -->
           <rect class="track" x="40" y="30" width="1120" height="12" fill="#8f9aa4"/>
           <rect class="track" x="40" y="398" width="1120" height="12" fill="#8f9aa4"/>
-
-          <!-- Dämmung in den Feldern -->
           <g class="insul">
             <rect x="366" y="42" width="164" height="356" fill="url(#wool)"/>
             <rect x="522" y="42" width="164" height="356" fill="url(#wool)"/>
             <rect x="678" y="42" width="164" height="356" fill="url(#wool)"/>
           </g>
-
-          <!-- Ständer (CW), Achsabstand 62,5 cm -->
           <g fill="#aeb7bf" stroke="#7d8892" stroke-width="1.5">
             <rect class="stud" style="--i:0" x="52"   y="42" width="14" height="356"/>
             <rect class="stud" style="--i:1" x="208"  y="42" width="14" height="356"/>
@@ -276,24 +225,14 @@
             <rect class="stud" style="--i:6" x="988"  y="42" width="14" height="356"/>
             <rect class="stud" style="--i:7" x="1144" y="42" width="14" height="356"/>
           </g>
-
-          <!-- Beplankung -->
-          <g class="board" style="--i:0">
-            <rect x="839" y="30" width="156" height="380" fill="#eef1f2" stroke="#b9c1c8"/>
-            <text x="917" y="400" text-anchor="middle" font-family="Archivo" font-size="11" fill="#2356a6" letter-spacing="1">GKB 12,5</text>
-          </g>
-          <g class="board" style="--i:1">
-            <rect x="995" y="30" width="165" height="380" fill="#eef1f2" stroke="#b9c1c8"/>
-            <text x="1078" y="400" text-anchor="middle" font-family="Archivo" font-size="11" fill="#c3322a" letter-spacing="1">GKF 12,5</text>
-          </g>
+          <g class="board" style="--i:0"><rect x="839" y="30" width="156" height="380" fill="#eceff0" stroke="#b9c1c8"/></g>
+          <g class="board" style="--i:1"><rect x="995" y="30" width="165" height="380" fill="#eceff0" stroke="#b9c1c8"/></g>
           <g class="screw" fill="#5b6670">
             <circle cx="846" cy="70" r="2.5"/><circle cx="846" cy="140" r="2.5"/><circle cx="846" cy="210" r="2.5"/><circle cx="846" cy="280" r="2.5"/><circle cx="846" cy="350" r="2.5"/>
             <circle cx="995" cy="70" r="2.5"/><circle cx="995" cy="140" r="2.5"/><circle cx="995" cy="210" r="2.5"/><circle cx="995" cy="280" r="2.5"/><circle cx="995" cy="350" r="2.5"/>
             <circle cx="1151" cy="70" r="2.5"/><circle cx="1151" cy="140" r="2.5"/><circle cx="1151" cy="210" r="2.5"/><circle cx="1151" cy="280" r="2.5"/><circle cx="1151" cy="350" r="2.5"/>
           </g>
-
-          <!-- Maßkette -->
-          <g class="dim" stroke="#17202a" stroke-width="1" fill="#17202a" font-family="Archivo" font-size="13">
+          <g class="dim" stroke="#d6342c" stroke-width="1.2" fill="#d6342c" font-family="Archivo" font-size="13">
             <line x1="59" y1="14" x2="215" y2="14"/>
             <line x1="59" y1="8" x2="59" y2="20"/>
             <line x1="215" y1="8" x2="215" y2="20"/>
@@ -304,121 +243,49 @@
     </div>
   </section>
 
-  <section class="block" id="leistungen">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Was wir bauen</h2>
-        <p class="lead">Von der einzelnen Trennwand bis zum kompletten Innenausbau. Wir arbeiten mit geprüften Systemen namhafter Hersteller und übergeben malerfertig.</p>
+  <section class="block" id="ueber-uns">
+    <div class="wrap split">
+      <h2>Über uns</h2>
+      <div class="text">
+        <p>Die Aufgabenbereiche von Mile Trockenbau sind vielfältig und umfassen Ausbauarbeiten jeglicher Art. Das Zusammenspiel unserer verschiedenen Professionisten ermöglicht einen reibungslosen Ablauf. Nach einer erfolgreichen Planung im Vorfeld steht einer schnellen Abwicklung Ihres Bauvorhabens nichts mehr im Wege.</p>
       </div>
-      <ul class="services">
-        <li>
-          <span class="stamp">GKB</span>
-          <h3>Trennwände und Vorsatzschalen</h3>
-          <p>Neue Raumaufteilung ohne Stemmen und Schutt. Ständerwände aus Metallprofilen und Gipskarton, auf Wunsch gedämmt für mehr Ruhe zwischen den Räumen.</p>
-        </li>
-        <li>
-          <span class="stamp fire">GKF</span>
-          <h3>Brandschutzwände und Verkleidungen</h3>
-          <p>Wände, Schächte und Stahlträger mit geprüften Brandschutzsystemen in der Feuerwiderstandsklasse, die Ihr Projekt verlangt.</p>
-        </li>
-        <li>
-          <span class="stamp">GKB</span>
-          <h3>Abgehängte Decken</h3>
-          <p>Abgehängte Decken verstecken Leitungen, schaffen Platz für Einbauleuchten und begradigen alte, unebene Decken.</p>
-        </li>
-        <li>
-          <span class="stamp">LOCH</span>
-          <h3>Akustikdecken</h3>
-          <p>Gelochte Platten nehmen Nachhall aus Büros, Praxen, Gasträumen und offenen Wohnbereichen.</p>
-        </li>
-        <li>
-          <span class="stamp">MW</span>
-          <h3>Dachgeschossausbau</h3>
-          <p>Vom kalten Dachboden zum Wohnraum: Dämmung, Dampfbremse und Verkleidung der Dachschrägen aus einer Hand.</p>
-        </li>
-        <li>
-          <span class="stamp">MW</span>
-          <h3>Schall- und Wärmeschutz</h3>
-          <p>Nachträgliche Dämmung von Wänden und Decken, damit es wärmer und leiser wird, ohne Großbaustelle.</p>
-        </li>
-        <li>
-          <span class="stamp">Q2–Q4</span>
-          <h3>Sanierung und Spachtelarbeiten</h3>
-          <p>Bestehende Wände und Decken instand setzen, begradigen und spachteln, bis zur gewünschten Oberflächenqualität.</p>
-        </li>
-      </ul>
-      <p class="legend">Die Kürzel stehen für das, was verbaut wird: GKB ist die Standard-Gipskartonplatte mit blauem Aufdruck, GKF die Brandschutzplatte mit rotem Aufdruck, MW Mineralwolle, Q2 bis Q4 die Qualitätsstufen der Oberfläche.</p>
     </div>
   </section>
 
-  <section class="block" id="ablauf">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>So läuft Ihr Auftrag</h2>
-        <p class="lead">Ein Ansprechpartner von der ersten Anfrage bis zur Übergabe.</p>
+  <section class="block" id="trockenbau">
+    <div class="wrap split">
+      <h2>Trockenbau</h2>
+      <div class="text">
+        <p>Wir übernehmen den Innenausbau Ihrer Räumlichkeiten, treffen schalldämmende oder akustische Maßnahmen, sorgen für Brand- und Wärmeschutz in Trockenbauweise und setzen gestalterische Wünsche um. Unsere Handwerker sind topgeschult, kennen sich mit den unterschiedlichen Trockenbaustoffen und ihren speziellen Eigenschaften aus und sorgen so für ein optimales Zusammenspiel.</p>
       </div>
-      <ol class="steps">
-        <li><h3>Anfrage</h3><p>Sie rufen an oder schreiben uns kurz, was Sie vorhaben.</p></li>
-        <li><h3>Besichtigung</h3><p>Wir sehen uns die Räume vor Ort an und messen auf.</p></li>
-        <li><h3>Angebot</h3><p>Sie bekommen ein schriftliches Angebot mit allen Positionen.</p></li>
-        <li><h3>Ausführung</h3><p>Montage zum vereinbarten Termin, Baustelle täglich aufgeräumt.</p></li>
-        <li><h3>Übergabe</h3><p>Gemeinsame Abnahme, malerfertig oder fertig gespachtelt.</p></li>
-      </ol>
     </div>
   </section>
 
   <section class="block" id="referenzen">
-    <div class="wrap">
-      <div class="section-head">
-        <h2>Referenzen</h2>
-        <p class="lead">Ein Auszug aus unseren Projekten in Oberösterreich.</p>
+    <div class="wrap split">
+      <h2>Referenzen</h2>
+      <div class="text">
+        <p>Mile Trockenbau steht für Zuverlässigkeit, Qualität und eine hochwertige Ausführung unserer kompetenten Fachkräfte. Kontaktieren Sie uns und lassen Sie sich bei Ihrem geplanten Innenausbau beraten. Wir freuen uns auf Sie und stimmen sämtliche Trockenbauarbeiten gerne auf Ihre Bedürfnisse ab.</p>
+        <ul class="services">
+          <li>Trockenbau</li>
+          <li>Ständerwände</li>
+          <li>Brandschutzwände</li>
+          <li>Akustische Decke</li>
+          <li>Innenausbau</li>
+        </ul>
       </div>
-      <!-- Bilder der bestehenden Referenzseite in den Ordner bilder/ legen und Dateinamen und Bildtexte unten anpassen. -->
-      <div class="refs">
-        <figure><div class="photo"><img src="bilder/referenz-1.jpg" alt="Referenzprojekt 1" onerror="this.replaceWith('Foto einsetzen')"></div><figcaption>Projekt <span>Ort</span></figcaption></figure>
-        <figure><div class="photo"><img src="bilder/referenz-2.jpg" alt="Referenzprojekt 2" onerror="this.replaceWith('Foto einsetzen')"></div><figcaption>Projekt <span>Ort</span></figcaption></figure>
-        <figure><div class="photo"><img src="bilder/referenz-3.jpg" alt="Referenzprojekt 3" onerror="this.replaceWith('Foto einsetzen')"></div><figcaption>Projekt <span>Ort</span></figcaption></figure>
-        <figure><div class="photo"><img src="bilder/referenz-4.jpg" alt="Referenzprojekt 4" onerror="this.replaceWith('Foto einsetzen')"></div><figcaption>Projekt <span>Ort</span></figcaption></figure>
-        <figure><div class="photo"><img src="bilder/referenz-5.jpg" alt="Referenzprojekt 5" onerror="this.replaceWith('Foto einsetzen')"></div><figcaption>Projekt <span>Ort</span></figcaption></figure>
-      </div>
-    </div>
-  </section>
-
-  <section class="block" id="ueber-uns">
-    <div class="wrap about">
-      <div>
-        <h2>Ein Betrieb, ein Ansprechpartner</h2>
-        <p>Die Mile Trockenbau GmbH wurde 2014 von Mile Malesevic in Leonding gegründet. Seitdem bauen wir Wände, Decken und Dachgeschosse für private Bauherren, Betriebe und Baufirmen in Linz und ganz Oberösterreich.</p>
-        <p>Trockenbau ist Präzisionsarbeit: Ein Profil, das nicht im Lot sitzt, sieht man später an jeder Fuge. Deshalb arbeiten wir genau, halten Termine und hinterlassen die Baustelle so, wie wir sie vorgefunden haben, nur mit neuen Wänden.</p>
-      </div>
-      <dl class="facts">
-        <div><dt>Gegründet</dt><dd>2014</dd></div>
-        <div><dt>Firmensitz</dt><dd>Leonding</dd></div>
-        <div><dt>Einsatzgebiet</dt><dd>Oberösterreich</dd></div>
-        <div><dt>Mitglied</dt><dd>VÖTB</dd></div>
-      </dl>
-    </div>
-  </section>
-
-  <section class="block jobs" id="jobs">
-    <div class="wrap">
-      <div>
-        <h2>Arbeiten bei Mile Trockenbau</h2>
-        <p class="lead">Sie arbeiten gern genau und sauber, als Trockenbauer, Helfer oder Lehrling? Schicken Sie uns ein paar Zeilen über sich.</p>
-      </div>
-      <div><a class="btn" href="mailto:office@mile-trockenbau.at?subject=Bewerbung">Bewerbung senden</a></div>
     </div>
   </section>
 
   <section class="block" id="kontakt">
-    <div class="wrap contact">
+    <div class="wrap split">
       <div>
-        <h2>Angebot anfragen</h2>
-        <p class="lead">Beschreiben Sie kurz Ihr Vorhaben. Wir melden uns innerhalb von zwei Werktagen.</p>
+        <h2>Kontakt</h2>
         <ul class="contact-list">
-          <li><span class="k">Telefon</span><a href="tel:+436765513720">+43 676 5513 720</a></li>
-          <li><span class="k">E-Mail</span><a href="mailto:office@mile-trockenbau.at">office@mile-trockenbau.at</a></li>
-          <li><span class="k">Adresse</span><a href="https://www.google.com/maps/search/?api=1&query=Bruno-Gallee-Weg+12,+4060+Leonding" target="_blank" rel="noopener">Bruno-Gallee-Weg 12/3, 4060 Leonding</a></li>
+          <li><span class="k">Adresse</span><a href="https://www.google.com/maps/search/?api=1&query=Bruno-Gallee-Weg+12,+4060+Leonding" target="_blank" rel="noopener">Bruno-Gallee-Weg 12/3<br>4060 Leonding</a></li>
+          <li><span class="k">Mob.</span><a href="tel:+436765513720">+43 (0) 676 55 13 720</a></li>
+          <li><span class="k">Fax</span><span class="v">+43 (0) 732 / 20 71 22</span></li>
+          <li><span class="k">Mail</span><a href="mailto:office@mile-trockenbau.at">office@mile-trockenbau.at</a></li>
         </ul>
       </div>
       <form id="anfrage" novalidate>
@@ -426,19 +293,17 @@
         <div class="field"><label for="f-tel">Telefon</label><input id="f-tel" name="telefon" type="tel" autocomplete="tel"></div>
         <div class="field full"><label for="f-mail">E-Mail</label><input id="f-mail" name="email" type="email" autocomplete="email" required></div>
         <div class="field full">
-          <label for="f-art">Was soll gebaut werden?</label>
+          <label for="f-art">Thema</label>
           <select id="f-art" name="art">
-            <option>Trennwand oder Vorsatzschale</option>
-            <option>Brandschutz</option>
-            <option>Abgehängte Decke oder Akustikdecke</option>
-            <option>Dachgeschossausbau</option>
-            <option>Sanierung oder Spachtelarbeiten</option>
-            <option>Etwas anderes</option>
+            <option>Trockenbau</option>
+            <option>Ständerwände</option>
+            <option>Brandschutzwände</option>
+            <option>Akustische Decke</option>
+            <option>Innenausbau</option>
           </select>
         </div>
-        <div class="field full"><label for="f-msg">Ihr Vorhaben</label><textarea id="f-msg" name="nachricht" placeholder="Ort, ungefähre Fläche, gewünschter Zeitraum"></textarea></div>
-        <p class="form-note">Beim Absenden öffnet sich Ihr E-Mail-Programm mit der fertigen Anfrage.</p>
-        <div><button class="btn" type="submit">Anfrage senden</button></div>
+        <div class="field full"><label for="f-msg">Nachricht</label><textarea id="f-msg" name="nachricht"></textarea></div>
+        <div><button class="btn" type="submit">Nachricht senden</button></div>
         <p class="form-status" role="status" aria-live="polite"></p>
       </form>
     </div>
@@ -446,18 +311,11 @@
 </main>
 
 <footer>
-  <div class="wrap">
-    <div>
-      <strong>Mile Trockenbau GmbH</strong>
-      <p>Bruno-Gallee-Weg 12/3, 4060 Leonding<br>Geschäftsführer: Mile Malesevic<br>Firmenbuchnummer: FN 418775x</p>
-    </div>
-    <div>
-      <strong>Kontakt</strong>
-      <p><a href="tel:+436765513720">+43 676 5513 720</a><br><a href="mailto:office@mile-trockenbau.at">office@mile-trockenbau.at</a></p>
-    </div>
-    <div>
-      <strong>Rechtliches</strong>
-      <p><a href="impressum.html">Impressum</a><br><a href="datenschutz.html">Datenschutz</a></p>
+  <div class="sig"><div class="wrap"><b>Mile Malesevic</b><span>GF</span></div></div>
+  <div class="card">
+    <div class="wrap">
+      <p>Bruno-Gallee-Weg 12/3<br>4060 Leonding<br>Mob.: <a href="tel:+436765513720">+43 (0) 676 55 13 720</a><br>Fax: +43 (0) 732 / 20 71 22<br>Mail: <a href="mailto:office@mile-trockenbau.at">office@mile-trockenbau.at</a></p>
+      <p>www.mile-trockenbau.at</p>
     </div>
   </div>
 </footer>
@@ -479,11 +337,11 @@
   form.addEventListener('submit', e => {
     e.preventDefault();
     const d = new FormData(form);
-    if (!d.get('name').trim() || !form.email.checkValidity() || !d.get('email').trim()) {
+    if (!d.get('name').trim() || !d.get('email').trim() || !form.email.checkValidity()) {
       status.textContent = 'Bitte Name und eine gültige E-Mail-Adresse eintragen.';
       return;
     }
-    const body = `Name: ${d.get('name')}\nTelefon: ${d.get('telefon')}\nE-Mail: ${d.get('email')}\nArbeit: ${d.get('art')}\n\n${d.get('nachricht')}`;
+    const body = `Name: ${d.get('name')}\nTelefon: ${d.get('telefon')}\nE-Mail: ${d.get('email')}\nThema: ${d.get('art')}\n\n${d.get('nachricht')}`;
     location.href = `mailto:office@mile-trockenbau.at?subject=${encodeURIComponent('Anfrage: ' + d.get('art'))}&body=${encodeURIComponent(body)}`;
     status.textContent = 'Ihr E-Mail-Programm wurde geöffnet. Bitte dort auf Senden klicken.';
   });
