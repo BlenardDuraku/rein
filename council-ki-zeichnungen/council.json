@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "title": "KI-Zeichnungsableitung f\u00fcr Maschinenbau: bauen, und womit starten?",
+  "slug": "ki-zeichnungsableitung-f-r-maschinenbau",
+  "dossier": 1,
+  "date": "2026-10-21",
+  "mode": "parallel",
+  "seats": [
+    {
+      "id": "konstruktionsleiter",
+      "title": "Konstruktionsleiter KMU-Maschinenbauer (Zielkunde)",
+      "group": "Kunden",
+      "weight": 2.0
+    },
+    {
+      "id": "zeichner",
+      "title": "Konstrukteur / technischer Zeichner (Endnutzer)",
+      "group": "Kunden",
+      "weight": 1
+    },
+    {
+      "id": "qs-normen",
+      "title": "Qualit\u00e4tssicherung / Normen",
+      "group": "Aufsicht",
+      "weight": 1
+    },
+    {
+      "id": "cad-entwickler",
+      "title": "CAD-Softwareentwickler (SolidWorks-/Creo-API)",
+      "group": "Technik",
+      "weight": 1
+    },
+    {
+      "id": "cad-hersteller",
+      "title": "CAD-Hersteller-Perspektive (Konkurrenz-Archetyp)",
+      "group": "Wettbewerb",
+      "weight": 1
+    },
+    {
+      "id": "investor",
+      "title": "Skeptischer Investor / CFO",
+      "group": "Kapital",
+      "weight": 1
+    },
+    {
+      "id": "it-datenschutz",
+      "title": "IT-Leiter / Datenschutz beim Kunden",
+      "group": "Aufsicht",
+      "weight": 1
+    }
+  ]
+}
