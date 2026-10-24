@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "title": "Top 5 Gruendungsideen fuer Solo-Gruender in Linz",
+  "slug": "gruendungsideen",
+  "dossier": 1,
+  "date": "2026-10-24",
+  "mode": "parallel",
+  "seats": [
+    {
+      "id": "bootstrapper",
+      "title": "Bootstrapping-Solo-Gruender",
+      "group": "Gruender",
+      "weight": 1
+    },
+    {
+      "id": "investor",
+      "title": "Fruehphasen-Investor (Business Angel, AT)",
+      "group": "Kapital",
+      "weight": 1
+    },
+    {
+      "id": "kmu-kunde",
+      "title": "KMU-Geschaeftsfuehrer Oberoesterreich (Zielkunde)",
+      "group": "Kunden",
+      "weight": 1
+    },
+    {
+      "id": "ki-experte",
+      "title": "KI-Technik-Experte",
+      "group": "Experten",
+      "weight": 1
+    },
+    {
+      "id": "plattform",
+      "title": "Wettbewerber-Perspektive - grosse KI-Plattform",
+      "group": "Wettbewerb",
+      "weight": 1
+    },
+    {
+      "id": "skeptiker",
+      "title": "Karriere- und Bildungsberater (Skeptiker)",
+      "group": "Kritiker",
+      "weight": 1
+    },
+    {
+      "id": "recht",
+      "title": "Recht und Regulierung (EU AI Act, Gewerbe AT)",
+      "group": "Regulierung",
+      "weight": 1
+    }
+  ]
+}
