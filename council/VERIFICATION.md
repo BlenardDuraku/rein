@@ -1,25 +1,107 @@
-<!-- council:todo -->
 # VERIFICATION: persona-free
 
-**No position, no vote.** Checked <n of N> load-bearing claims from DOSSIER-01-gruendungsideen.md and
-the Round 1 reports. Each claim was checked against its primary source or an independent one, not
-against the document or tool that produced it.
+**Keine Position, keine Stimme.** Gelistet: **34** tragende Behauptungen aus DOSSIER-01-gruendungsideen.md
+und den Round-1-Berichten (V1–V34). Davon **31 gegen eine Primär- oder unabhängige Quelle geprüft**
+(V28 nur zur Hälfte), 2 als ESTIMATE eingeordnet (V12, V34; nur Methode und Arithmetik geprüft),
+1 UNVERIFIED (V33, Quelle nicht erreicht) plus die Teilaussage in V28.
+Keine Behauptung wurde gegen das Dokument geprüft, aus dem sie stammt.
 
-Verdicts: **CONFIRMED** (source supports it), **CONTRADICTED** (source says otherwise; the correct
-value is given), **MISLEADING** (true but framed so it will mislead: wrong baseline, one favourable
-point, missing caveat), **UNVERIFIED** (could not reach a source; say where you looked),
-**ESTIMATE** (not checkable; method stated and reasonable, or not).
+**Abgedeckte Round-1-Berichte (alle sieben, beim zweiten Durchgang ohne todo-Marker):** recht,
+skeptiker, plattform, ki-experte, bootstrapper, investor, kmu-kunde. Geprüft wurden jeweils die neuen
+tragenden Fakten, nicht Positionen oder Wertungen. ROUND1-TALLY, ROUND2-* und RECOMMENDATION waren beim
+Schreiben noch Stubs und wurden nicht geprüft.
+
+Verdicts: **CONFIRMED** (Quelle stützt es), **CONTRADICTED** (Quelle sagt anderes; der korrekte Wert
+steht dabei), **MISLEADING** (stimmt, ist aber so gerahmt, dass es in die Irre führt: falsche
+Bezugsgröße, nur ein günstiger Datenpunkt, fehlender Vorbehalt), **UNVERIFIED** (Quelle nicht
+erreicht; wo gesucht wurde, steht dabei), **ESTIMATE** (nicht prüfbar; ob die Methode genannt und
+vernünftig ist, steht dabei).
+
+### Zugang und Methode (wichtig für das Gewicht der Verdicts)
+
+- **Direktabruf fast überall blockiert.** WebFetch scheiterte bei allen Zielseiten (DNS-Fehler). Per
+  curl über den Sandbox-Proxy kam für ris.bka.gv.at, eur-lex.europa.eu, wko.at, bmf.gv.at, usp.gv.at,
+  arbeiterkammer.at, oesterreich.gv.at, jusline.at, europarl.europa.eu, consilium.europa.eu,
+  digital-strategy.ec.europa.eu, docs.n8n.io, support.n8n.io und Wikipedia jeweils 403 zurück.
+  Erreichbar war nur **raw.githubusercontent.com**. Von dort habe ich den n8n-Lizenztext (LICENSE.md,
+  master) selbst gelesen.
+- **Alles andere lief über Websuche.** Die Treffer und Auszüge stammen von Primärseiten (WKO, SVS,
+  AMS, ÖGB, EUR-Lex-Eintrag, Land OÖ/WKO-Programmdokument, TRUMPF-Pressemitteilung, Statistik Austria
+  über AHK) und von unabhängigen Kanzlei- bzw. Fachseiten. Die Volltexte von Gesetzen und Amtsblatt
+  (RIS, EUR-Lex) habe ich **nicht selbst gelesen**. Ein CONFIRMED bedeutet hier: Mehrere unabhängige
+  Auszüge stimmen überein, darunter mindestens eine Primärquelle.
 
 ## 1. Claims checked
 
+### 1a. Dossier
+
 | # | Claim | Made in | Verdict | What I found | Source |
 |---|---|---|---|---|---|
-| V1 | ... | DOSSIER §4 F1 | ... | ... | ... |
+| V1 | n8n steht unter der "Sustainable Use License". Interne Nutzung und Beratung sind erlaubt, n8n als gehosteter Dienst für Dritte ist eingeschränkt. | DOSSIER §4 F5 | CONFIRMED (mit Präzisierung) | Lizenztext v1.0: Nutzung "only for your own internal business purposes or for non-commercial or personal use"; Weitergabe nur kostenlos und nichtkommerziell. Dass Kundenarbeit erlaubt ist, steht **nicht im Lizenztext**, sondern in n8ns FAQ bzw. Support-Artikel: Workflows für Kunden bauen und Setup/Wartung verrechnen ist erlaubt, **solange Kunden Workflows nicht selbst erstellen oder bearbeiten können**. Eine kommerzielle Lizenz (Embed/Enterprise) ist nötig, sobald Externe Workflows bauen oder konfigurieren (per Editor, eigener Oberfläche, API oder KI-Agent), bei Hosting als Dienst und bei White-Label. Eine gemeinsame eigene Instanz mit Daten und Zugangsdaten mehrerer Kunden ist nach Community- und Drittquellen eine Grauzone. "Community license" auf docs.n8n.io ist nur ein Name für dieselbe SUL, keine neue Lizenz. | github.com/n8n-io/n8n LICENSE.md (selbst gelesen, 24.10.2026); Suchauszüge aus docs.n8n.io License FAQ und support.n8n.io "Which license do I need for my use case?"; nordflux.de, community.n8n.io |
+| V2 | "Dienstleistungen in der automatischen Datenverarbeitung und Informationstechnik" ist in AT ein freies Gewerbe (ohne Befähigungsnachweis). | DOSSIER §4 F6 | CONFIRMED | § 153 GewO 1994 steht im Abschnitt "Freie Gewerbe" (zuletzt geändert BGBl. I 111/2002). Zu diesem Gewerbe gibt es ein WKO-Berufsbild und einen Gründerleitfaden. Abgrenzungen dazu siehe V25/V26. | RIS-Eintrag § 153 GewO (Suchtreffer, nicht abrufbar); forum-media.at GewO-Gliederung; WKO-Berufsbild Informationstechnologen (PDF) |
+| V3 | Kleinunternehmerregelung: Umsatzsteuerbefreiung bis 55.000 € Bruttojahresumsatz (seit 2025). | DOSSIER §4 F7 | CONFIRMED | Seit 1.1.2025 gelten 55.000 € **brutto** (bis 2024: 35.000 € netto), eingeführt mit dem Progressionsabgeltungsgesetz 2025. Für 2026 keine Änderung gefunden. Es gibt eine Toleranz von 10 % (60.500 €). Die Grenze muss im Vorjahr und im laufenden Jahr eingehalten sein. Kein Vorsteuerabzug. | usp.gv.at "Kleinunternehmerregelung ab 2025" (Suchtreffer); WKO Vbg; Trauner-Datenblatt 2025 |
+| V4 | Ernährungsberatung ist in AT "teilweise reglementiert". Die Beratung von Kranken ist Diätolog:innen und Ärzt:innen vorbehalten, für Gesunde gibt es "Wege über bestimmte Gewerbe". | DOSSIER §4 F8 | MISLEADING | Der Kranken-Teil stimmt. Für Gesunde ist **individuelle** Ernährungsberatung aber ebenfalls an eine Befähigung gebunden: Sie gehört zum reglementierten Gewerbe "Lebens- und Sozialberatung, eingeschränkt auf Ernährungsberatung" (§ 119 GewO) und setzt ein Studium der Ernährungswissenschaften oder die Diätologie-Ausbildung voraus. Laut OGH 4 Ob 222/17a (2017) und Folgeentscheidungen ist gewerbliche individuelle Ernährungsberatung qualifizierten Personen vorbehalten. "Ernährungstraining" wurde darunter subsumiert; die Reichweite ist zwischen Verbänden und WKO strittig. "Wege für Gesunde" gibt es also praktisch nur mit Qualifikation. F3 nennt keine formale Ausbildung, deshalb wirkt die Formulierung für I3 offener, als die Rechtslage ist. | WKO NÖ "Ernährungsberatung"; VEÖ-Blog; OTS-Meldungen 2018/2019 zu OGH 4 Ob 222/17a; RIS 4 Ob 177/18k (Suchtreffer); WKO-Stellungnahme laut traineracademy.at |
+| V5 | AI Act: Verbote und KI-Kompetenzpflicht seit Feb. 2025, GPAI-Pflichten seit Aug. 2025. | DOSSIER §4 F9 | CONFIRMED (Kompetenzpflicht inzwischen abgeschwächt, siehe V7) | Art. 113 VO (EU) 2024/1689: Kapitel I und II ab 2.2.2025, GPAI ab 2.8.2025. Von allen geprüften Sekundärquellen übereinstimmend wiedergegeben. | Suchauszüge zu VO 2024/1689 und 2026/1744 (Kanzlei-/Fachseiten); EUR-Lex nicht abrufbar |
+| V6 | Hochrisiko-Pflichten "ab Aug. 2026 bzw. später". Eine Verschiebung wurde vorgeschlagen, ihr Status ist zu prüfen. | DOSSIER §4 F9 | CONTRADICTED | Die Verschiebung ist **beschlossen und in Kraft**: Der "Digital Omnibus on AI" ist VO (EU) **2026/1744**. Parlament 16.6.2026 (423:57:174), Rat 29.6.2026, Amtsblatt 24.7.2026, in Kraft seit 27.7.2026. Neue Fristen: Hochrisiko nach **Anhang III ab 2.12.2027**, nach **Anhang I (Produkte) ab 2.8.2028**. Aug. 2026 gilt für Hochrisiko nicht mehr. Seit 2.8.2026 gelten die **Transparenzpflichten nach Art. 50**, z. B. Offenlegung bei KI, die mit Menschen interagiert; das betrifft I4. Für die Kennzeichnung KI-generierter Inhalte gilt bis 2.12.2026 eine Übergangsfrist für Altsysteme. Der Datenschutzteil des Omnibus (DSGVO/ePrivacy) ist nicht beschlossen (Stand 12.10.2026). | EUR-Lex-Eintrag eli/reg/2026/1744 (Suchtreffer); nicfab.eu, cypheron.cz, actuia.com, Cooley, HLC, Cloud Security Alliance (Suchauszüge) |
+| V7 | "KI-Kompetenzpflicht seit Feb. 2025" (als geltende Pflicht). | DOSSIER §4 F9 | MISLEADING (Stand Okt. 2026) | Art. 1(5) VO 2026/1744 ersetzt Art. 4 vollständig. Statt "ausreichendes Niveau sicherstellen" gilt nun "Maßnahmen zur Förderung ergreifen" (Bemühungs- statt Erfolgspflicht), ohne garantiertes Niveau für Einzelne. Die Pflicht besteht weiter, aber schwächer, als F9 nahelegt. Relevant für den Vorschlag "AI-Act-Art.-4-Schulungen" (plattform). | lawandtechnology.eu, trainyng.be, haqq.ai (Suchauszüge mit Zitat des neuen Art. 4); EUR-Lex nicht abrufbar |
+| V8 | Konkurrenzklauseln gelten nur unter gesetzlichen Bedingungen (§ 36 AngG), u. a. ab einer Mindest-Entgeltgrenze. | DOSSIER §4 F10 | CONFIRMED | Voraussetzungen (kumulativ): bei Abschluss volljährig, höchstens 1 Jahr nach Ende, beschränkt auf den Geschäftszweig des Arbeitgebers, keine unbillige Erschwerung des Fortkommens, Entgelt über der Grenze. Die Grenze ist das 20-Fache der täglichen ASVG-Höchstbeitragsgrundlage, 2026: 20 × 231 € = **4.620 € brutto/Monat** (ohne Sonderzahlungen, letzter Monat). Altverträge vor 29.12.2015: 17-fach = 3.927 €; vor 17.3.2006: keine Grenze. Für Arbeiter gilt § 2c AVRAG inhaltsgleich. | WKO "Konkurrenzverbot – Konkurrenzklausel"; AK "Konkurrenzklausel"; brandauer-rechtsanwaelte.at (03/2026, 05/2026); Höchstbeitragsgrundlage 2026 (6.930 €/Monat, 231 €/Tag) laut WKO "voraussichtliche Werte 2026", ÖAAB, Forvis Mazars |
+| V9 | F10 als Rahmen für die Nebentätigkeits-Frage (Treuepflicht plus § 36 AngG). | DOSSIER §4 F10 | MISLEADING | § 36 AngG betrifft nur die Zeit **nach** dem Arbeitsverhältnis. Für eine Gründung **während** der Anstellung zählen das gesetzliche Konkurrenzverbot nach **§ 7 AngG** (Angestellte dürfen ohne Bewilligung kein selbständiges kaufmännisches Unternehmen betreiben und keine Handelsgeschäfte im Geschäftszweig des Dienstgebers machen; Folgen: Schadenersatz bzw. Eintrittsrecht, Entlassung), vertragliche Nebenbeschäftigungsklauseln und die Treuepflicht. Ob der Gründer Angestellter oder Arbeiter ist, entscheidet über § 7 AngG. Laut OGH sind bloße Vorbereitungshandlungen noch kein Verstoß. Über die Entgeltgrenze in F10 wirkt das Risiko kleiner, als es während der Anstellung ist. | Suchauszüge: Linde-Verlag (AngG-Kommentar, Leseprobe), oesterreich.gv.at "Zulässigkeit einer Nebenbeschäftigung", OGH-Entscheidung via jusline.at/entscheidung/333488 |
+| V10 | Startup-Unterstützung in Linz u. a. durch tech2b, JKU, aws, FFG. | DOSSIER §2 | CONFIRMED | tech2b ist eines von fünf AplusB-Zentren mit Förderperiode 2022–2027 und 2026 aktiv (neues Büro in der Tabakfabrik; setzt im Auftrag des Landes OÖ das Plug-and-Play-Zentrum für Physical/Industrial AI am JKU-Campus um, Sept. 2026). | land-oberoesterreich.gv.at (20 Jahre tech2b); trendingtopics.eu; Suchauszüge 2026 |
+| V11 | I4: laufende Kosten pro Minute (ohne Zahl). | DOSSIER §1 | CONFIRMED (Größenordnung siehe V21) | Voice-Agent-Plattformen rechnen pro Minute ab, all-in ca. 0,07–0,31 USD/Min. | siehe V21 |
+| V12 | E2: KMU in OÖ zahlen ca. 1.000–5.000 € einmalig plus 100–500 €/Monat Wartung. | DOSSIER §5 E2 | ESTIMATE (Methode genannt, nicht verankert) | Keine öffentliche Preisquelle für DACH- oder OÖ-Automatisierungsprojekte gefunden; Anbieterblogs nennen Kostenblöcke, aber keine Beträge. Die Methode ("übliche Preise kleiner Agenturen") ist genannt, aber nicht belegt; der Falsifikator (5 Kundengespräche) ist sinnvoll. Unabhängige Plausibilisierung: Die Nutzenrechnung des kmu-kunde (siehe V32) landet im unteren Teil der Spanne. Zwei Vorbehalte. Erstens setzt Digital.PLUS 26 mindestens 12.000 € Projektkosten voraus (V29), Projekte im E2-Bereich fallen also nicht darunter; die KMU.DIGITAL-Umsetzungsförderung (Projekte 2.000–30.000 €) passt dagegen (V30). Zweitens stellt E2 keine Szenarien mit fallenden Preisen dar. | Websuche "KI Automatisierung Agentur Preise KMU n8n" (blckalpaca.at, alloq.digital): keine Beträge |
+
+Nicht als prüfbare Fakten gezählt: F1–F4 (Selbstauskunft) sowie E1, E3, E4, E5 (als Annahmen gekennzeichnet; ihre Falsifikatoren sind genannt).
+
+### 1b. Round-1-Berichte
+
+| # | Claim | Made in | Verdict | What I found | Source |
+|---|---|---|---|---|---|
+| V13 | AI Omnibus VO (EU) 2026/1744 in Kraft seit 27.7.2026; Anhang III ab 2.12.2027, Anhang I ab 2.8.2028. | ROUND1-recht §2, ROUND1-kmu-kunde §2 | CONFIRMED | wie V6 | wie V6 |
+| V14 | Art. 50 AI Act verlangt KI-Offenlegung beim Telefonassistenten (I4). | ROUND1-recht §1 | CONFIRMED | Art. 50 gilt seit 2.8.2026; das Omnibus hat ihn nicht verschoben, nur die Kennzeichnungs-Übergangsfrist für Altsysteme bis 2.12.2026 eingeführt. | wie V6 |
+| V15 | n8n-Lizenztext: "only for your own internal business purposes…"; Kundenarbeit nur über FAQ erlaubt. | ROUND1-ki-experte §2/§3 | CONFIRMED | Wortlaut selbst geprüft. Die Erlaubnis für Kundenarbeit steht im FAQ bzw. Support-Artikel (V1). Der Schluss "Multi-Kunden-Dienst auf eigener Instanz voraussichtlich lizenzpflichtig" passt zur offiziellen Linie, sobald Kunden Workflows konfigurieren; reines Betreiben ohne Kundenzugriff ist nach Support-Artikel erlaubt, das Mehrkunden-Hosting bleibt eine Grauzone. | LICENSE.md (GitHub); support.n8n.io (Suchauszug) |
+| V16 | n8n-FAQ: Workflows für Kunden erlaubt, wenn Kunden sie nicht bearbeiten können; gemeinsame Instanz mit vielen Kunden riskant. | ROUND1-recht §2, ROUND1-bootstrapper §2 | CONFIRMED | wie V1 | wie V1 |
+| V17 | Kleinunternehmer: 55.000 € brutto, 10 % Toleranz, auch im Vorjahr einzuhalten; vorher 35.000 € netto. | ROUND1-recht §2, ROUND1-bootstrapper §2, ROUND1-skeptiker §2 | CONFIRMED | wie V3 | wie V3 |
+| V18 | Konkurrenzklausel-Grenze 2026 = 4.620 € brutto/Monat (20 × 231 €; HBG 6.930 €). | ROUND1-recht, ROUND1-skeptiker, ROUND1-investor | CONFIRMED | wie V8. Die Gegenrechnung des skeptiker (halbe HBG 3.465 €) stimmt mit AMS/ÖGB 2026 überein. Investor schrieb "keine offizielle Quelle gefunden"; die WKO nennt die HBG 2026 mit 6.930 €/231 €. | wie V8 |
+| V19 | § 7 AngG Konkurrenzverbot während des Dienstverhältnisses (für Angestellte). | ROUND1-recht §2, ROUND1-investor §2 | CONFIRMED | wie V9 | wie V9 |
+| V20 | "Unternehmensberatung" ist ein reglementiertes Gewerbe. | ROUND1-recht §1, ROUND1-bootstrapper §2 (dort als Annahme) | CONFIRMED | § 94 Z 74 GewO; Befähigungsnachweis nach Unternehmensberatungs-Verordnung bzw. individuelle Befähigung (§ 19 GewO); VwGH Ra 2020/04/0182 und Ra 2026/04/0077. | WKO Wien "UBIT Zugangsvoraussetzungen" (PDF); VwGH via RIS/jusline (Suchauszüge) |
+| V21 | Voice-Agents kosten ca. 0,07–0,30 USD/Min. all-in. | ROUND1-ki-experte §2/§3 | CONFIRMED (nur Sekundärquellen) | Übereinstimmend ca. 0,07–0,31 USD/Min. (Retell-Listung); Vapi 0,05 USD/Min. Plattformgebühr, all-in 0,13–0,31 USD. Fast nur Vergleichs- und Affiliate-Blogs, Preisblätter der Anbieter nicht direkt gelesen. | dupple.com, 11x.ai, techsy.io, speechify.ai (Suchauszüge) |
+| V22 | Buchhaltung bzw. Lohnverrechnung für Dritte ist nach BiBuG vorbehalten. | ROUND1-recht §1 | CONFIRMED (teilweise) | § 2 Abs. 1 BiBuG 2014 behält Bilanzbuchhaltern u. a. die laufende Geschäftsbuchhaltung samt Lohnverrechnung vor; selbständige Ausübung nur nach öffentlicher Bestellung. Die genaue Liste für die Stufe "Buchhalter" habe ich nicht erreicht. | BGBl. I 191/2013 (RIS-Treffer); WKO "Information Bilanzbuchhalter", "Berufsausübung Bilanzbuchhaltungsberufe" (Suchauszüge) |
+| V23 | 5-Jahres-Überlebensrate AT-Gründungen 36,4 % (Kohorte 2019), 35,7 % (2018). | ROUND1-skeptiker §1/§3 | CONFIRMED | Statistik-Austria-Meldung (Juni 2026): 36,4 % der 2019 gegründeten Unternehmen 2024 noch aktiv, Vorjahr 35,7 %. Hinweis: Im produzierenden Bereich war mehr als jedes zweite Unternehmen nach 5 Jahren aktiv. Die Rate schwankt also stark nach Branche. | Statistik Austria via AHK Österreich (PDF, Suchauszug) |
+| V24 | Mit Gewerbeschein beginnt die SVS-Pflicht "ohne Versicherungsgrenze". | ROUND1-skeptiker §2/§3 | MISLEADING | Die GSVG-Pflicht ab Gewerbeberechtigung stimmt. Es fehlt die **Kleinunternehmer-Ausnahme**: Gewerbetreibende mit Einkünften ≤ 6.613,20 € (2026) und Umsatz ≤ 55.000 € können auf **Antrag** die Ausnahme von Kranken- und Pensionsversicherung beantragen (unter weiteren Voraussetzungen). Die Unfallversicherung bleibt (ca. 12,95 €/Monat). Die Mindestbeiträge, die laut skeptiker "einen Teil der 2.500 € auffressen", sind in der Testphase also vermeidbar. | SVS "Einkünfte unter der Versicherungsgrenze"; SVS-Versicherungsanmeldung; gewieft.at, team23tax.at (Suchauszüge) |
+| V25 | Versicherungsgrenze 2026 ca. 6.613 €; gilt für Neue Selbständige, nicht automatisch für Gewerbetreibende. | ROUND1-bootstrapper §2/§3 | CONFIRMED | 6.613,20 €/Jahr. Für Neue Selbständige ist sie die Pflichtgrenze; für Gewerbetreibende gibt es nur die Antrags-Ausnahme aus V24. | wie V24 |
+| V26 | Weiterbildungszeit (Nachfolge der Bildungskarenz) seit 2026; 12 Monate beim Dienstgeber nötig; kein Rechtsanspruch. | ROUND1-skeptiker §3 | CONFIRMED | Anträge seit 8.6.2026 möglich; mindestens 12 Monate durchgehend beim aktuellen Arbeitgeber; AMS-Ermessensförderung ohne Rechtsanspruch; Budget auf 150 Mio. €/Jahr gekürzt; Beihilfe 1.212–2.038,20 €/Monat. | AMS "Weiterbildungszeit und Weiterbildungsteilzeit"; ÖGB Info Kompakt 01/2026; GPA-Broschüre (Suchauszüge) |
+| V27 | n8n hat einen "AI Workflow Builder", der Workflows aus natürlicher Sprache erzeugt (Cloud-Pläne). | ROUND1-plattform §3 | CONFIRMED | Bei Start (Okt. 2025) für Cloud Trial/Starter/Pro, Enterprise folgte; self-hosted war damals nicht verfügbar. Pro Prompt wird ein Credit verbraucht. Aktueller Plan-Umfang nicht geprüft. | docs.n8n.io/build/…/ai-workflow-builder (Suchtreffer); dev.to; growwstacks.com |
+| V28 | Microsoft "Copilot Business" ca. 21 $/Nutzer/Monat; Computer-using Agents in Copilot Studio seit Mai 2026 allgemein verfügbar. | ROUND1-plattform §3 | Preis CONFIRMED; GA-Datum UNVERIFIED | 21 $/Nutzer/Monat (jährlich, bis 300 Nutzer) bestätigt, dazu befristete 18-$-Aktionen. Zur allgemeinen Verfügbarkeit von Computer Use in Copilot Studio ergab die Suche nichts. | eesel.ai, office-watch.com, aldridge.com (Suchauszüge); microsoft.com nicht abrufbar, nicht direkt geprüft |
+| V29 | Digital.PLUS 26 (Land OÖ/WKO OÖ): 35 % der Projektkosten bis max. 7.000 €, Anträge bis 2.11.2026. | ROUND1-kmu-kunde §2/§3 | MISLEADING | Die Eckdaten stimmen (Antrag 1.6.–2.11.2026, solange Mittel reichen). Es fehlt die Bedingung **Mindestprojektkosten 12.000 € netto**. Die Projekte aus E2 (1.000–5.000 €) und der Zahlungsrahmen des kmu-kunde (1.500–3.000 €) sind damit **nicht förderfähig**. Weitere Bedingungen: Projektstart höchstens 10 Wochen vor Antrag; ausgeschlossen, wer schon Digital Starter 23/24 oder DIGITAL.PLUS 2025 erhalten hat; WKO-OÖ-Mitgliedschaft nötig. | WKO "Digital.PLUS Oberösterreich"; Programmdokument Digital.Plus 26 (Stand 26.03.2026); Richtlinie Land OÖ (Beschluss 18.05.2026) (Suchauszüge) |
+| V30 | KMU.DIGITAL (Bund): bis 3.000 € für Beratung, Anträge seit 12.1.2026. | ROUND1-kmu-kunde §2/§3 | CONFIRMED | Bis 3.000 € je Unternehmen (Status-Analyse 80 %/max. 400 €; Strategie 50 %/max. 1.000 €), nur über **zertifizierte** Berater:innen. Danach gibt es eine Umsetzungsförderung: 30 %, max. 6.000 €, für Projekte von 2.000–30.000 €; Voraussetzung ist eine geförderte Beratung. Ob ein Neugründer zertifiziert werden kann, hat kmu-kunde offen gelassen; ich habe es auch nicht geprüft. | WKO Kärnten "Neue Fördermittel für KMU.DIGITAL ab 12. Jänner"; WKO Sbg; selbststaendig-machen.at (Suchauszüge) |
+| V31 | aws Preseed setzt hohes Wachstums- bzw. Innovationspotenzial voraus. | ROUND1-investor §2/§3 | CONFIRMED | Preseed/Seedfinancing Innovative Solutions (Programm 2024–2026): hohes Innovationspotenzial, skalierbares Geschäftsmodell, Proof of Concept, Eigenanteil ≥ 10 %. Laut einer Drittquelle liefen die Einreichungen bis **30.9.2026**; ob es 2027 eine Nachfolge-Ausschreibung gibt, habe ich nicht geprüft. | aws.at Programmdokument ab 1.1.2024 (Suchtreffer); WKO "Preseed Innovative Solutions"; reflecta.org |
+| V32 | Ein großer Laserhersteller bietet laut Pressemitteilung vom 24.4.2025 einen KI-Schnittkanten-Assistenten für Bediener an. | ROUND1-plattform §3 | CONFIRMED | TRUMPF-Pressemitteilung 24.04.2025 zum "Cutting Assistant" (Handscanner-Foto der Schnittkante, Parametervorschläge; TruLaser ab 6 kW, gekauft ab Mai 2025). | trumpf.com PR-PDF 04-24-2025 und Flyer (Suchauszüge) |
+| V33 | KI-Rezeptionisten für Kleinbetriebe ab ca. 29 $/Monat, typisch 30–300 $/Monat. | ROUND1-plattform §1/§3 | UNVERIFIED | Gezielt nicht gefunden. Die Voice-Suche (V21) lieferte Minutenpreise, keine Monatspakete. Gesucht per Websuche; die Anbieterseiten (dupple.com, cloudtalk.io, hyperleap.ai) waren nicht direkt abrufbar. | — |
+| V34 | Rechenschätzungen: 10–15 Std./Woche ergeben ca. 1.400–2.600 € Umsatz/Monat (skeptiker); Gehaltsersatz braucht ca. 4.000–4.500 €/Monat bzw. 45–55 k€/Jahr (skeptiker, bootstrapper); 5 Std./Woche sind ca. 600–700 €/Monat wert (kmu-kunde); 600 Min. Voice ergeben ca. 40–180 USD (ki-experte). | ROUND1-skeptiker, -bootstrapper, -kmu-kunde, -ki-experte | ESTIMATE (Arithmetik geprüft) | Die Arithmetik stimmt: 45–65 h × 50 % × 60–80 €/h = 1.350–2.600 €. kmu-kunde: 2.600 € × 14/12 × 1,3 ≈ 3.943 €, geteilt durch 130–150 h = 26–30 €/h, × 21,5 h = **565–650 €** (die genannte Obergrenze 700 € liegt leicht darüber). Voice: 600 × 0,07–0,30 = 42–180 USD. Der Umsatzbedarf für Gehaltsersatz ist eine Daumenregel ohne Steuerrechnung; die beiden Schätzungen sind konsistent (48–54 k€ bzw. 45–55 k€). Sie liegen nahe an der 55.000-€-Kleinunternehmergrenze (V3). | eigene Nachrechnung |
 
 ## 2. Summary
 
-- **Failed and load-bearing:** ...
-- **Failed, not load-bearing:** ...
-- **True but misleading:** ...
-- **Could not reach (never reached, not verified absent):** ...
+- **Failed and load-bearing:**
+  - **V6 (F9, Hochrisiko-Zeitplan):** CONTRADICTED. Die Verschiebung ist kein Vorschlag mehr, sondern
+    mit VO (EU) 2026/1744 seit 27.7.2026 in Kraft. Hochrisiko nach Anhang III gilt ab 2.12.2027, nach
+    Anhang I ab 2.8.2028, nicht ab Aug. 2026. Für die Ideen relevanter: Art. 50 (Transparenz) gilt
+    seit 2.8.2026, z. B. für I4.
+- **Failed, not load-bearing:** keine.
+- **True but misleading:**
+  - **V4 (F8, Ernährungsberatung):** Individuelle Ernährungsberatung ist auch für Gesunde reglementiert
+    (§ 119 GewO; Studium Ernährungswissenschaften oder Diätologie). Das trifft I3 bei fehlender Ausbildung (F3).
+  - **V7 (F9, KI-Kompetenzpflicht):** Art. 4 wurde durch das Omnibus auf eine Bemühungspflicht abgeschwächt.
+  - **V9 (F10, Rahmen):** § 36 AngG ist nachvertraglich. Während der Anstellung zählen § 7 AngG (falls
+    Angestellter), Vertragsklauseln und Treuepflicht. Die Entgeltgrenze hilft dort nicht.
+  - **V24 (ROUND1-skeptiker, SVS "ohne Versicherungsgrenze"):** Es fehlt die Antrags-Ausnahme für
+    Kleinunternehmer (Einkünfte ≤ 6.613,20 €, Umsatz ≤ 55.000 €; Unfallversicherung bleibt).
+  - **V29 (ROUND1-kmu-kunde, Digital.PLUS 26):** Mindestprojektkosten 12.000 € netto. Projekte in der
+    E2-Größenordnung sind nicht förderfähig.
+- **Could not reach (never reached, not verified absent):**
+  - V28 (teilweise): allgemeine Verfügbarkeit von Computer Use in Copilot Studio seit Mai 2026.
+  - V33: Monatspreise für KI-Rezeptionisten ab ca. 29 $.
+  - Allgemein: Gesetzes- und Amtsblatt-Volltexte (RIS, EUR-Lex) und die n8n-Doku-/Support-Seiten waren
+    nicht direkt abrufbar (403 bzw. DNS-Fehler). Die dazugehörigen Verdicts beruhen auf übereinstimmenden
+    Suchauszügen (siehe "Zugang und Methode").
+  - ESTIMATE ohne externe Verankerung: E2 (V12); keine öffentliche DACH-/OÖ-Preisquelle gefunden.
 - **Everything else confirmed.**
