@@ -33,14 +33,14 @@
       --bg: #101317; --surface: #181c21; --surface-2: #1f242a; --ink: #e8ebee; --muted: #9aa3ad;
       --line: #2c333b; --line-strong: #3d4651; --accent: #f08a4b; --accent-soft: #3a2418;
       --ok: #5cc48b; --ok-soft: #16301f; --info: #7fb0f0; --info-soft: #172538; --crit: #f07a6e; --crit-soft: #3a1b18;
-      --focus: #7fb0f0; --shadow: none;
+      --focus: #7fb0f0; --shadow: none; color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
     --bg: #101317; --surface: #181c21; --surface-2: #1f242a; --ink: #e8ebee; --muted: #9aa3ad;
     --line: #2c333b; --line-strong: #3d4651; --accent: #f08a4b; --accent-soft: #3a2418;
     --ok: #5cc48b; --ok-soft: #16301f; --info: #7fb0f0; --info-soft: #172538; --crit: #f07a6e; --crit-soft: #3a1b18;
-    --focus: #7fb0f0; --shadow: none;
+    --focus: #7fb0f0; --shadow: none; color-scheme: dark;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
@@ -685,10 +685,15 @@ async function renderReview(el, jobId) {
   linesEl.addEventListener('click', (e) => { const b = e.target.closest('[data-del]'); if (!b) return; readForm(); data.line_items.splice(Number(b.dataset.del), 1); renderLines(); });
 
   loadDocInto($('#viewer', el), jobId, a.mime_type, a.dateiname);
+  if (session.demo) $('#open-doc', el).hidden = true;
   $('#open-doc', el).addEventListener('click', () => { if (docUrl) window.open(docUrl, '_blank'); });
 
   const decide = async (entscheidung, btn) => {
-    if (entscheidung === 'ablehnen' && !confirm('Beleg ablehnen? Er wird nicht ans ERP übergeben.')) return;
+    if (entscheidung === 'ablehnen' && btn.dataset.armed !== '1') {
+      btn.dataset.armed = '1'; btn.textContent = 'Wirklich ablehnen? Nochmal klicken';
+      setTimeout(() => { if (btn.isConnected) { btn.dataset.armed = ''; btn.textContent = 'Ablehnen'; } }, 5000);
+      return;
+    }
     $$('.actions button', el).forEach((b) => { b.disabled = true; });
     const label = btn.textContent; btn.textContent = 'Wird gespeichert …';
     try {
@@ -782,6 +787,7 @@ async function openDetail(jobId) {
       <section><details><summary class="small">Erkannte Daten (JSON)</summary><pre class="json" style="margin-top:8px">${esc(JSON.stringify(d, null, 2))}</pre></details></section>`;
     $('#close', root).addEventListener('click', closeDrawer);
     $('#close', root).focus();
+    if (session.demo) $('#dl', root).hidden = true;
     $('#dl', root).addEventListener('click', async () => {
       try {
         const res = await http('GET', 'dokument', { query: { job_id: jobId }, raw: true });
