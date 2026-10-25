@@ -32,11 +32,13 @@ const CRED = {
   anthropic: { httpHeaderAuth: { id: 'DF_ANTHROPIC', name: 'DF Anthropic API' } },
   api: { httpHeaderAuth: { id: 'DF_API_KEY', name: 'DF API-Schlüssel' } },
   reviewer: { httpHeaderAuth: { id: 'DF_REVIEW_KEY', name: 'DF Prüfer-API' } },
+  admin: { httpHeaderAuth: { id: 'DF_ADMIN_KEY', name: 'DF Admin-API' } },
   imap: { imap: { id: 'DF_IMAP', name: 'DF Postfach Eingang' } },
   smtp: { smtp: { id: 'DF_SMTP', name: 'DF SMTP' } },
 };
 
 const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+const DASHBOARD_HTML = readFileSync(join(root, 'dashboard/index.html'), 'utf8');
 const SPOOL_DIR = '/data/spool';
 const ALERT_DIR = '/data/alerts';
 
@@ -656,77 +658,113 @@ return out;`, 'runOnceForAllItems'));
 }
 
 // --------------------------------------------------------------------------
-// 08 API für Prüfoberfläche und Dashboard
+// 08 API und Dashboard
 // --------------------------------------------------------------------------
 function api() {
-  const wf = new Wf(IDS.api, 'DF 08 API Prüfung und Status');
+  const wf = new Wf(IDS.api, 'DF 08 API und Dashboard');
+  let row = 0;
   const respond = (name, pos) => wf.add(name, 'n8n-nodes-base.respondToWebhook', 1.1, {
     respondWith: 'json', responseBody: '={{ JSON.stringify($json.body) }}', options: { responseCode: '={{ $json.http_status }}' },
   }, { position: pos });
+  // Webhook → SQL → Antwort. answer: JS-Ausdruck, der aus $json den Antwortkörper baut
+  const endpoint = ({ method, path, cred, label, query, params, answer }) => {
+    const y = row++ * 180;
+    const h = wf.add(`${method} ${path}`, 'n8n-nodes-base.webhook', 2, {
+      httpMethod: method, path, authentication: 'headerAuth', responseMode: 'responseNode', options: {},
+    }, { credentials: cred, webhookId: `df-${path.replace(/\//g, '-')}-${method.toLowerCase()}`, position: [0, y] });
+    const q = pg(wf, label, query, params, { onError: 'continueRegularOutput', position: [240, y] });
+    const c = wf.add(`Antwort ${label}`, 'n8n-nodes-base.code', 2, code(`
+if ($json.error) return { json: { http_status: 400, body: { ok: false, fehler: String($json.error).slice(0, 300) } } };
+${answer}`), { position: [480, y] });
+    const r = respond(`Antworten ${label}`, [720, y]);
+    wf.chain(h, q, c, r);
+  };
+  const prueferExpr = "$json.headers['x-pruefer'] || $json.body.pruefer || null";
+  const mandantExpr = "$json.query.mandant || null";
 
-  // Entscheidung
-  const h1 = wf.add('POST pruefung/entscheidung', 'n8n-nodes-base.webhook', 2, {
-    httpMethod: 'POST', path: 'pruefung/entscheidung', authentication: 'headerAuth', responseMode: 'responseNode', options: {},
-  }, { credentials: CRED.reviewer, webhookId: 'df-pruefung-entscheidung', position: [0, 0] });
+  endpoint({ method: 'GET', path: 'status', cred: CRED.reviewer, label: 'Kennzahlen',
+    query: `select docflow.stats($1, 1) as heute, docflow.stats($1, 7) as woche, docflow.stats($1, 30) as monat,
+  (select count(*) from docflow.jobs where status in ('queued','retry') and ($1::text is null or mandant = $1)) as warteschlange,
+  (select count(*) from docflow.jobs where status = 'processing' and ($1::text is null or mandant = $1)) as in_arbeit,
+  (select count(*) from docflow.jobs where status = 'review' and ($1::text is null or mandant = $1)) as zur_pruefung,
+  (select count(*) from docflow.exports where status = 'failed' and ($1::text is null or mandant = $1)) as export_fehlgeschlagen,
+  docflow.circuit_open() as schutzschalter_offen, docflow.mandanten() as mandanten, now() as zeit`,
+    params: `[${mandantExpr}]`, answer: "return { json: { http_status: 200, body: { ok: true, ...$json } } };" });
+
+  endpoint({ method: 'GET', path: 'pruefung/offen', cred: CRED.reviewer, label: 'Prüfliste',
+    query: "select coalesce(jsonb_agg(to_jsonb(r)), '[]'::jsonb) as liste from docflow.review_list($1) r",
+    params: `[${mandantExpr}]`, answer: "return { json: { http_status: 200, body: { ok: true, faelle: $json.liste } } };" });
+
   // Prüfer-Identität bevorzugt aus dem Header X-Pruefer, den ein SSO-Proxy setzt
-  const d = pg(wf, 'Entscheidung speichern', 'select docflow.review_decide($1::uuid, $2::uuid, $3, $4::jsonb, $5) as r',
-    "[$json.body.job_id, $json.body.token || null, $json.body.entscheidung, $json.body.daten ? JSON.stringify($json.body.daten) : null, $json.headers['x-pruefer'] || $json.body.pruefer || null]", { onError: 'continueRegularOutput', position: [240, 0] });
-  const d2 = wf.add('Antwort Entscheidung', 'n8n-nodes-base.code', 2, code(`
-if ($json.error || !$json.r) return { json: { http_status: 400, body: { ok: false, fehler: $json.error || 'Ungültige Anfrage' } } };
-return { json: { http_status: $json.r.ok ? 200 : 409, body: $json.r } };`), { position: [480, 0] });
-  const r1 = respond('Antworten Entscheidung', [720, 0]);
-  wf.chain(h1, d, d2, r1);
+  endpoint({ method: 'POST', path: 'pruefung/entscheidung', cred: CRED.reviewer, label: 'Entscheidung',
+    query: 'select docflow.review_decide($1::uuid, $2::uuid, $3, $4::jsonb, $5) as r',
+    params: `[$json.body.job_id, $json.body.token || null, $json.body.entscheidung, $json.body.daten ? JSON.stringify($json.body.daten) : null, ${prueferExpr}]`,
+    answer: "return { json: { http_status: $json.r.ok ? 200 : 409, body: $json.r } };" });
 
-  // Offene Prüffälle
-  const h2 = wf.add('GET pruefung/offen', 'n8n-nodes-base.webhook', 2, {
-    httpMethod: 'GET', path: 'pruefung/offen', authentication: 'headerAuth', responseMode: 'responseNode', options: {},
-  }, { credentials: CRED.reviewer, webhookId: 'df-pruefung-offen', position: [0, 200] });
-  const l = pg(wf, 'Prüfliste laden', "select coalesce(jsonb_agg(to_jsonb(r)), '[]'::jsonb) as liste from docflow.review_list($1) r",
-    '[$json.query.mandant || null]', { position: [240, 200] });
-  const l2 = wf.add('Antwort Prüfliste', 'n8n-nodes-base.code', 2, code("return { json: { http_status: 200, body: { ok: true, faelle: $json.liste } } };"), { position: [480, 200] });
-  const r2 = respond('Antworten Prüfliste', [720, 200]);
-  wf.chain(h2, l, l2, r2);
+  endpoint({ method: 'GET', path: 'dokumente', cred: CRED.reviewer, label: 'Dokumentenliste',
+    query: 'select docflow.docs_list($1, $2, $3, $4) as liste',
+    params: `[${mandantExpr}, $json.query.status || null, $json.query.suche || null, Math.min(Number($json.query.limit) || 200, 1000)]`,
+    answer: "return { json: { http_status: 200, body: { ok: true, dokumente: $json.liste } } };" });
 
-  // Status / Kennzahlen für das Dashboard
-  const h3 = wf.add('GET status', 'n8n-nodes-base.webhook', 2, {
-    httpMethod: 'GET', path: 'status', authentication: 'headerAuth', responseMode: 'responseNode', options: {},
-  }, { credentials: CRED.api, webhookId: 'df-status', position: [0, 400] });
-  const st = pg(wf, 'Kennzahlen', `select docflow.stats($1, 1) as heute, docflow.stats($1, 7) as woche, docflow.stats($1, 30) as monat,
-  (select count(*) from docflow.jobs where status in ('queued','retry') and ($1 is null or mandant = $1)) as warteschlange,
-  (select count(*) from docflow.jobs where status = 'review' and ($1 is null or mandant = $1)) as zur_pruefung,
-  docflow.circuit_open() as schutzschalter_offen`, '[$json.query.mandant || null]', { position: [240, 400] });
-  const st2 = wf.add('Antwort Status', 'n8n-nodes-base.code', 2, code("return { json: { http_status: 200, body: { ok: true, ...$json } } };"), { position: [480, 400] });
-  const r3 = respond('Antworten Status', [720, 400]);
-  wf.chain(h3, st, st2, r3);
+  endpoint({ method: 'GET', path: 'auftrag', cred: CRED.reviewer, label: 'Auftrag',
+    query: 'select docflow.job_detail($1::uuid) as a', params: '[$json.query.job_id]',
+    answer: "return { json: $json.a ? { http_status: 200, body: { ok: true, auftrag: $json.a } } : { http_status: 404, body: { ok: false, fehler: 'Auftrag nicht gefunden' } } };" });
 
-  // Originaldokument für die Prüfansicht
+  endpoint({ method: 'GET', path: 'exporte/fehlgeschlagen', cred: CRED.reviewer, label: 'Fehlgeschlagene Exporte',
+    query: 'select docflow.failed_exports($1) as liste', params: `[${mandantExpr}]`,
+    answer: "return { json: { http_status: 200, body: { ok: true, exporte: $json.liste } } };" });
+
+  endpoint({ method: 'POST', path: 'export/erneut', cred: CRED.reviewer, label: 'Export erneut',
+    query: 'select docflow.requeue_export($1::uuid, $2) as r', params: `[$json.body.job_id, ${prueferExpr} || 'dashboard']`,
+    answer: "return { json: { http_status: $json.r.ok ? 200 : 409, body: $json.r } };" });
+
+  endpoint({ method: 'GET', path: 'alarme', cred: CRED.reviewer, label: 'Alarme',
+    query: 'select docflow.recent_alerts(200) as liste', params: null,
+    answer: "return { json: { http_status: 200, body: { ok: true, alarme: $json.liste } } };" });
+
+  endpoint({ method: 'GET', path: 'einstellungen', cred: CRED.reviewer, label: 'Einstellungen lesen',
+    query: 'select docflow.settings_editable() as s', params: null,
+    answer: "return { json: { http_status: 200, body: { ok: true, einstellungen: $json.s } } };" });
+
+  // Ändern nur mit eigenem Admin-Schlüssel
+  endpoint({ method: 'POST', path: 'einstellungen', cred: CRED.admin, label: 'Einstellung ändern',
+    query: 'select docflow.settings_set($1, $2::jsonb, $3) as r',
+    params: `[$json.body.schluessel, JSON.stringify($json.body.wert), ${prueferExpr} || 'admin']`,
+    answer: "return { json: { http_status: $json.r.ok ? 200 : 400, body: $json.r } };" });
+
+  // Originaldokument (Binärantwort)
+  const y = row++ * 180;
   const h4 = wf.add('GET dokument', 'n8n-nodes-base.webhook', 2, {
     httpMethod: 'GET', path: 'dokument', authentication: 'headerAuth', responseMode: 'responseNode', options: {},
-  }, { credentials: CRED.reviewer, webhookId: 'df-dokument', position: [0, 600] });
+  }, { credentials: CRED.reviewer, webhookId: 'df-dokument', position: [0, y] });
   const doc = pg(wf, 'Dokument laden', `select d.filename, d.mime_type, translate(encode(d.content, 'base64'), E'\\n', '') as b64
 from docflow.jobs j join docflow.documents d on d.id = j.document_id
-where j.id = $1::uuid and j.review_token = $2::uuid`, '[$json.query.job_id, $json.query.token]', { onError: 'continueRegularOutput', alwaysOutputData: true, position: [240, 600] });
-  const found = ifNode(wf, 'Gefunden?', '!!$json.b64', 'true', { position: [480, 600] });
+where j.id = $1::uuid`, '[$json.query.job_id]', { onError: 'continueRegularOutput', alwaysOutputData: true, position: [240, y] });
+  const found = ifNode(wf, 'Gefunden?', '!!$json.b64', 'true', { position: [480, y] });
   const bin = wf.add('Als Datei', 'n8n-nodes-base.code', 2, code(`
-return { json: {}, binary: { data: { data: $json.b64, mimeType: $json.mime_type, fileName: $json.filename } } };`), { position: [720, 560] });
-  const r4 = wf.add('Datei ausliefern', 'n8n-nodes-base.respondToWebhook', 1.1, { respondWith: 'binary', options: {} }, { position: [960, 560] });
-  const nf = wf.add('Nicht gefunden', 'n8n-nodes-base.code', 2, code("return { json: { http_status: 404, body: { ok: false, fehler: 'Dokument nicht gefunden oder Token ungültig' } } };"), { position: [720, 680] });
-  const r5 = respond('Antworten nicht gefunden', [960, 680]);
+return { json: {}, binary: { data: { data: $json.b64, mimeType: $json.mime_type, fileName: $json.filename } } };`), { position: [720, y - 40] });
+  const r4 = wf.add('Datei ausliefern', 'n8n-nodes-base.respondToWebhook', 1.1, { respondWith: 'binary', options: {} }, { position: [960, y - 40] });
+  const nf = wf.add('Nicht gefunden', 'n8n-nodes-base.code', 2, code("return { json: { http_status: 404, body: { ok: false, fehler: 'Dokument nicht gefunden' } } };"), { position: [720, y + 60] });
+  const r5 = respond('Antworten nicht gefunden', [960, y + 60]);
   wf.chain(h4, doc, found);
   wf.link(found, bin, 0); wf.link(found, nf, 1);
   wf.link(bin, r4); wf.link(nf, r5);
 
-  // Fehlgeschlagenen Export erneut anstoßen
-  const h5 = wf.add('POST export/erneut', 'n8n-nodes-base.webhook', 2, {
-    httpMethod: 'POST', path: 'export/erneut', authentication: 'headerAuth', responseMode: 'responseNode', options: {},
-  }, { credentials: CRED.reviewer, webhookId: 'df-export-erneut', position: [0, 820] });
-  const rq = pg(wf, 'Export erneut anstoßen', 'select docflow.requeue_export($1::uuid, $2) as r',
-    "[$json.body.job_id, $json.headers['x-pruefer'] || $json.body.pruefer || 'api']", { onError: 'continueRegularOutput', position: [240, 820] });
-  const rq2 = wf.add('Antwort Export', 'n8n-nodes-base.code', 2, code(`
-if ($json.error || !$json.r) return { json: { http_status: 400, body: { ok: false, fehler: $json.error || 'Ungültige Anfrage' } } };
-return { json: { http_status: $json.r.ok ? 200 : 409, body: $json.r } };`), { position: [480, 820] });
-  const r6 = respond('Antworten Export', [720, 820]);
-  wf.chain(h5, rq, rq2, r6);
+  // Das Dashboard selbst (enthält keine Geheimnisse; die Schlüssel gibt der Nutzer beim Anmelden ein)
+  const y2 = row++ * 180;
+  const hd = wf.add('GET dashboard', 'n8n-nodes-base.webhook', 2, {
+    httpMethod: 'GET', path: 'dashboard', authentication: 'none', responseMode: 'responseNode', options: {},
+  }, { webhookId: 'df-dashboard', position: [0, y2] });
+  const rd = wf.add('Dashboard ausliefern', 'n8n-nodes-base.respondToWebhook', 1.1, {
+    respondWith: 'text', responseBody: DASHBOARD_HTML,
+    options: { responseHeaders: { entries: [
+      { name: 'Content-Type', value: 'text/html; charset=utf-8' },
+      { name: 'Cache-Control', value: 'no-store' },
+      { name: 'X-Frame-Options', value: 'DENY' },
+      { name: 'Content-Security-Policy', value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob: data:; frame-src 'self' blob:; object-src blob:" },
+    ] } },
+  }, { position: [240, y2] });
+  wf.link(hd, rd);
   return wf.json();
 }
 
@@ -810,7 +848,7 @@ return { json: a, binary: { data: { data, mimeType: 'application/json', fileName
 
 // --------------------------------------------------------------------------
 const builders = { '01-eingang-email': emailIntake, '02-eingang-http': webhookIntake, '03-verarbeitung': worker, '04-export-erp': exporter,
-  '05-wachhund': watchdog, '06-alarm-versand': alerts, '07-zwischenspeicher-nachholen': spoolRecovery, '08-api-pruefung-status': api,
+  '05-wachhund': watchdog, '06-alarm-versand': alerts, '07-zwischenspeicher-nachholen': spoolRecovery, '08-api-dashboard': api,
   '09-fehlerbehandlung': errorHandler, '10-notfall-alarm': emergency };
 
 const outDir = join(root, 'workflows');

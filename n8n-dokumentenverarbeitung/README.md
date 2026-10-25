@@ -27,7 +27,7 @@ Ausgelegt für Konzerne mit mehreren Gesellschaften (Mandanten) und tausenden Do
 | DF 05 Wachhund | Holt hängende Aufträge zurück, erkennt Staus, sendet ein Lebenszeichen und um 6:55 Uhr den Tagesbericht |
 | DF 06 Alarm-Versand | Teams/Slack → E-Mail → Datei, jeweils als Ersatz für den vorherigen Kanal |
 | DF 07 Zwischenspeicher nachholen | Übernimmt Dateien, die während eines Datenbankausfalls angekommen sind |
-| DF 08 API Prüfung und Status | Prüfliste, Freigabe, Originaldokument, Kennzahlen für das Dashboard |
+| DF 08 API und Dashboard | Alle Schnittstellen der Belegzentrale und das Dashboard selbst |
 | DF 09 Fehlerbehandlung | Fängt jeden Absturz eines Workflows ab |
 | DF 10 Notfall-Alarm | Alarmiert auch dann, wenn die Datenbank weg ist |
 
@@ -113,6 +113,7 @@ Schutz gegen manipulierte Dokumente (Prompt-Injection): Die KI behandelt den Dok
    - `DF Anthropic API`: Typ *Header Auth*, Name `x-api-key`, Wert = API-Schlüssel
    - `DF API-Schlüssel`: Typ *Header Auth*, z. B. Name `X-API-Key` und ein langer Zufallswert. Für Upload und Status. Diesen Schlüssel bekommen Scanner und Portale.
    - `DF Prüfer-API`: eigener Schlüssel nur für die Prüfoberfläche. Damit können Scanner nie selbst freigeben.
+   - `DF Admin-API`: eigener Schlüssel, nur zum Ändern der Einstellungen im Dashboard
    - `DF Postfach Eingang`: IMAP
    - `DF SMTP`: Mailversand für Alarme und Tagesbericht
 3. Workflows importieren: `n8n import:workflow --separate --input=workflows/`, danach alle außer DF 09 und DF 10 aktivieren. Diese beiden laufen nur, wenn sie aufgerufen werden.
@@ -153,6 +154,38 @@ Upload und Status mit `DF API-Schlüssel`, alle Prüf-Aufrufe mit `DF Prüfer-AP
 | `POST /webhook/pruefung/entscheidung` | `{job_id, token, entscheidung: freigeben/ablehnen/erneut_verarbeiten, daten?}`, Prüfer aus `X-Pruefer` oder `pruefer`. Über der Freigabegrenze ist eine zweite Freigabe durch eine andere Person nötig. |
 | `POST /webhook/export/erneut` | `{job_id}`: einen endgültig fehlgeschlagenen Export nach Behebung der Ursache erneut senden |
 | `GET /webhook/status?mandant=…` | Kennzahlen: heute, 7 und 30 Tage, Automatisierungsquote, Warteschlange, KI-Verbrauch |
+
+## Dashboard „Belegzentrale“
+
+Eine Weboberfläche für Buchhaltung und Prüfer (`dashboard/index.html`), ohne Build-Schritt und ohne externe Abhängigkeiten außer der Schrift.
+
+| Bereich | Was man dort tut |
+|---|---|
+| Übersicht | Durchlauf vom Eingang bis zum ERP, Automatisierungsquote, KI-Verbrauch und geschätzte Kosten, Systemzustand, letzte Alarme. Zeitraum: heute, 7 oder 30 Tage. Aktualisiert sich alle 30 Sekunden. |
+| Zur Prüfung | Prüfliste mit Gründen. Links das Originaldokument, rechts die erkannten Daten zum Korrigieren. Wo die beiden KI-Agenten Verschiedenes gelesen haben, ist das Feld orange markiert und zeigt beide Werte. Positionen lassen sich bearbeiten, die Summen werden live nachgerechnet. Freigeben, Ablehnen, Erneut verarbeiten; danach geht es direkt zum nächsten Fall. Über der Freigabegrenze verlangt das System eine zweite Person. |
+| Dokumente | Alle Belege mit Suche (Dateiname, Belegnummer, Aussteller) und Statusfilter. Die Detailansicht zeigt den kompletten Verlauf aus dem Audit-Protokoll, das Original und den Exportstatus. |
+| Hochladen | Dateien per Ziehen und Ablegen. Jede Datei bekommt eine eigene Rückmeldung, auch für Duplikate, Ablehnungen und den Zwischenspeicher. |
+| Exporte | Endgültig fehlgeschlagene ERP-Übergaben nach Behebung der Ursache erneut senden |
+| Alarme | Alle Meldungen mit Stufe und Zustellweg |
+| Einstellungen | Schwellen, Modelle, ERP-Adresse und Alarmwege. Lesen mit dem Prüfer-Schlüssel, ändern nur mit dem Admin-Schlüssel. Jede Änderung wird geprüft und als Alarm protokolliert. |
+
+Weitere Eigenschaften:
+- Gesellschaftsauswahl oben, gilt für alle Bereiche
+- Hell- und Dunkelmodus
+- Handy-tauglich
+- Bedienbar mit der Tastatur
+- Alle Inhalte aus Dokumenten werden maskiert ausgegeben, eingeschleuster HTML-Code ist also wirkungslos
+
+**Bereitstellung:** Der Webserver in `docker-compose.yml` (nginx, `deploy/nginx.conf`) liefert das Dashboard unter `https://<host>/belegzentrale/` aus und leitet `/webhook/` an n8n weiter. Zusätzlich liefert n8n es selbst unter `/webhook/dashboard` aus. Dort schottet n8n die Seite allerdings in einer Sandbox ab, sodass Browser die eingebettete PDF-Vorschau blockieren. Für den Echtbetrieb deshalb den Webserver nutzen.
+
+**Anmeldung:** Name des Prüfers und Prüfer-Schlüssel. Optional der Upload-Schlüssel und der Admin-Schlüssel. Die Schlüssel bleiben nur im geöffneten Browserfenster. Für Konzerne empfiehlt sich davor ein SSO-Proxy, der den Header `X-Pruefer` mit dem angemeldeten Benutzer setzt.
+
+**Demo:** Wird `dashboard/index.html` direkt geöffnet, startet „Demo ansehen“ eine vollständige Simulation mit Beispielbelegen und denselben Regeln (Token, Vier-Augen-Prinzip, Prüfung der Einstellungen). Dabei verlässt nichts den Browser.
+
+**Getestet:**
+- Alle Funktionen im Browser (Playwright), im Demo-Modus und live gegen n8n und PostgreSQL
+- Auswirkungen in der Datenbank geprüft: Freigabe mit Korrektur, Export erneut, Einstellung geändert und ungültige Eingabe abgelehnt, Upload samt Verarbeitung
+- Zugriffsschutz: Ein falscher Schlüssel wird abgewiesen, ohne Admin-Schlüssel sind die Einstellungen gesperrt
 
 ## Kosten (Schätzung)
 

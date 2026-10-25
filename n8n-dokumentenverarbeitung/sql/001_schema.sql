@@ -769,3 +769,101 @@ begin
   perform docflow.log_event(p_job, 'export_erneut_angestossen', '{}'::jsonb, p_actor);
   return jsonb_build_object('ok', true);
 end $$;
+
+-- ---------------------------------------------------------------------------
+-- Funktionen für das Dashboard
+-- ---------------------------------------------------------------------------
+
+-- Dokumentenliste mit Filter und Suche (Dateiname, Belegnummer, Aussteller)
+create or replace function docs_list(p_mandant text default null, p_status text default null, p_search text default null, p_limit int default 200)
+returns jsonb language sql stable as $$
+  select coalesce(jsonb_agg(x order by x->>'empfangen' desc), '[]'::jsonb) from (
+    select jsonb_build_object(
+      'job_id', j.id, 'mandant', j.mandant, 'dateiname', d.filename, 'status', j.status, 'empfangen', d.received_at,
+      'quelle', d.source, 'typ', coalesce(j.final_data, j.extraction)->>'doc_type',
+      'belegnummer', coalesce(j.final_data, j.extraction)->>'document_number',
+      'aussteller', coalesce(j.final_data, j.extraction)#>>'{issuer,name}',
+      'brutto', coalesce(j.final_data, j.extraction)#>>'{totals,gross}',
+      'waehrung', coalesce(j.final_data, j.extraction)->>'currency',
+      'freigabe', case when j.status in ('approved','done') then coalesce(j.decided_by, 'automatisch') end,
+      'gruende', j.review_reason, 'versuche', j.attempts, 'letzter_fehler', j.last_error,
+      'export', (select e.status from docflow.exports e where e.job_id = j.id)) as x
+    from docflow.jobs j join docflow.documents d on d.id = j.document_id
+    where (p_mandant is null or j.mandant = p_mandant)
+      and (p_status is null or j.status = p_status)
+      and (p_search is null or d.filename ilike '%' || p_search || '%'
+           or coalesce(j.final_data, j.extraction)->>'document_number' ilike '%' || p_search || '%'
+           or coalesce(j.final_data, j.extraction)#>>'{issuer,name}' ilike '%' || p_search || '%')
+    order by d.received_at desc limit p_limit) s
+$$;
+
+-- Ein Auftrag mit allen Daten und dem Protokoll
+create or replace function job_detail(p_job uuid) returns jsonb language sql stable as $$
+  select jsonb_build_object(
+    'job_id', j.id, 'mandant', j.mandant, 'status', j.status, 'dateiname', d.filename, 'mime_type', d.mime_type,
+    'groesse', d.size_bytes, 'quelle', d.source, 'quelle_info', d.source_ref, 'empfangen', d.received_at, 'sha256', d.sha256,
+    'aufbewahren_bis', d.retention_until, 'versuche', j.attempts, 'letzter_fehler', j.last_error,
+    'gruende', j.review_reason, 'review_token', case when j.status = 'review' then j.review_token end,
+    'erste_freigabe', j.first_approver, 'freigegeben_von', j.decided_by,
+    'extraktion', j.extraction, 'pruefung', j.verification, 'validierung', j.validation, 'daten', j.final_data,
+    'modelle', j.models_used, 'verbrauch', j.usage,
+    'export', (select jsonb_build_object('status', e.status, 'versuche', e.attempts, 'erp', e.http_done, 'datei', e.file_done,
+                                         'fehler', e.last_error, 'gesendet', e.sent_at) from docflow.exports e where e.job_id = j.id),
+    'verlauf', (select coalesce(jsonb_agg(jsonb_build_object('zeit', ev.at, 'ereignis', ev.event, 'von', ev.actor, 'details', ev.details) order by ev.id), '[]'::jsonb)
+                from docflow.job_events ev where ev.job_id = j.id))
+  from docflow.jobs j join docflow.documents d on d.id = j.document_id where j.id = p_job
+$$;
+
+create or replace function failed_exports(p_mandant text default null) returns jsonb language sql stable as $$
+  select coalesce(jsonb_agg(jsonb_build_object('job_id', e.job_id, 'mandant', e.mandant, 'dateiname', d.filename,
+    'versuche', e.attempts, 'fehler', e.last_error, 'datei_geschrieben', e.file_done, 'seit', e.created_at) order by e.created_at), '[]'::jsonb)
+  from docflow.exports e join docflow.jobs j on j.id = e.job_id join docflow.documents d on d.id = j.document_id
+  where e.status = 'failed' and (p_mandant is null or e.mandant = p_mandant)
+$$;
+
+create or replace function recent_alerts(p_limit int default 100) returns jsonb language sql stable as $$
+  select coalesce(jsonb_agg(jsonb_build_object('id', a.id, 'zeit', a.at, 'stufe', a.severity, 'meldung', a.message,
+    'zugestellt', a.delivered, 'unterdrueckt', a.suppressed) order by a.id desc), '[]'::jsonb)
+  from (select * from docflow.alerts order by id desc limit p_limit) a
+$$;
+
+create or replace function mandanten() returns jsonb language sql stable as $$
+  select coalesce(jsonb_agg(m order by m), '[]'::jsonb) from (select distinct mandant m from docflow.jobs) x
+$$;
+
+-- Einstellungen, die über das Dashboard geändert werden dürfen (mit Prüfung)
+create or replace function settings_editable() returns jsonb language sql stable as $$
+  select coalesce(jsonb_object_agg(key, value), '{}'::jsonb) from docflow.settings
+  where key in ('confidence_auto','verify_above_gross','review_above_gross','always_verify_types','model_primary','model_secondary',
+                'export_mode','erp_url','alert_webhook_url','alert_email_to','alert_email_from','heartbeat_url','stale_queue_minutes','max_attempts')
+$$;
+
+create or replace function settings_set(p_key text, p_value jsonb, p_actor text) returns jsonb language plpgsql as $$
+declare v_old jsonb;
+begin
+  if p_key not in (select jsonb_object_keys(docflow.settings_editable())) then
+    return jsonb_build_object('ok', false, 'fehler', format('Einstellung %s darf hier nicht geändert werden', p_key));
+  end if;
+  if p_key in ('confidence_auto') and not (jsonb_typeof(p_value) = 'number' and (p_value #>> '{}')::numeric between 0.5 and 1) then
+    return jsonb_build_object('ok', false, 'fehler', 'Sicherheitsschwelle muss zwischen 0,5 und 1 liegen');
+  end if;
+  if p_key in ('verify_above_gross','review_above_gross','stale_queue_minutes','max_attempts')
+     and not (jsonb_typeof(p_value) = 'number' and (p_value #>> '{}')::numeric > 0) then
+    return jsonb_build_object('ok', false, 'fehler', 'Wert muss eine positive Zahl sein');
+  end if;
+  if p_key = 'export_mode' and (p_value #>> '{}') not in ('http','file','both') then
+    return jsonb_build_object('ok', false, 'fehler', 'Exportweg muss http, file oder both sein');
+  end if;
+  if p_key = 'always_verify_types' and jsonb_typeof(p_value) <> 'array' then
+    return jsonb_build_object('ok', false, 'fehler', 'Liste erwartet');
+  end if;
+  if p_key not in ('confidence_auto','verify_above_gross','review_above_gross','stale_queue_minutes','max_attempts','always_verify_types')
+     and jsonb_typeof(p_value) <> 'string' then
+    return jsonb_build_object('ok', false, 'fehler', 'Text erwartet');
+  end if;
+  select value into v_old from docflow.settings where key = p_key;
+  update docflow.settings set value = p_value, updated_at = now() where key = p_key;
+  perform docflow.raise_alert('info', 'settings:' || p_key || ':' || now()::text,
+    format('Einstellung %s geändert von %s: %s → %s', p_key, coalesce(p_actor, '?'), v_old, p_value), '{}'::jsonb);
+  return jsonb_build_object('ok', true, 'key', p_key, 'value', p_value);
+end $$;

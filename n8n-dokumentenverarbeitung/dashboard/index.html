@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Belegzentrale</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #eef0f2;
+    --surface: #ffffff;
+    --surface-2: #f6f7f8;
+    --ink: #14181d;
+    --muted: #5a636e;
+    --line: #d8dce1;
+    --line-strong: #b9c0c8;
+    --accent: #c2410c;        /* Signalorange: braucht Aufmerksamkeit */
+    --accent-soft: #fdeee6;
+    --ok: #1f7a48;
+    --ok-soft: #e5f3eb;
+    --info: #1d5aa8;
+    --info-soft: #e7eef9;
+    --crit: #b42318;
+    --crit-soft: #fbe9e7;
+    --focus: #1d5aa8;
+    --shadow: 0 1px 2px rgba(20, 24, 29, .06);
+    --radius: 6px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101317; --surface: #181c21; --surface-2: #1f242a; --ink: #e8ebee; --muted: #9aa3ad;
+      --line: #2c333b; --line-strong: #3d4651; --accent: #f08a4b; --accent-soft: #3a2418;
+      --ok: #5cc48b; --ok-soft: #16301f; --info: #7fb0f0; --info-soft: #172538; --crit: #f07a6e; --crit-soft: #3a1b18;
+      --focus: #7fb0f0; --shadow: none;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #101317; --surface: #181c21; --surface-2: #1f242a; --ink: #e8ebee; --muted: #9aa3ad;
+    --line: #2c333b; --line-strong: #3d4651; --accent: #f08a4b; --accent-soft: #3a2418;
+    --ok: #5cc48b; --ok-soft: #16301f; --info: #7fb0f0; --info-soft: #172538; --crit: #f07a6e; --crit-soft: #3a1b18;
+    --focus: #7fb0f0; --shadow: none;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 15px/1.5 "Public Sans", system-ui, sans-serif; font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  h1, h2, h3 { margin: 0; line-height: 1.2; }
+  h1 { font-size: 22px; font-weight: 700; letter-spacing: -.01em; }
+  h2 { font-size: 17px; font-weight: 650; }
+  h3 { font-size: 14px; font-weight: 650; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+
+  /* Anmeldung */
+  .login { min-height: 100%; display: grid; place-items: center; padding: 24px 16px; }
+  .login-card { width: 100%; max-width: 440px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 28px; box-shadow: var(--shadow); }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-mark { width: 28px; height: 28px; border-radius: 6px; background: var(--ink); color: var(--surface); display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+  .login-card h1 { margin: 18px 0 4px; }
+  .field { display: grid; gap: 5px; margin-top: 14px; }
+  .field label { font-size: 13px; font-weight: 600; }
+  .field .hint { font-size: 12px; color: var(--muted); }
+  input[type=text], input[type=password], input[type=number], input[type=date], input[type=search], select, textarea {
+    width: 100%; padding: 8px 10px; border: 1px solid var(--line-strong); border-radius: var(--radius); background: var(--surface);
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 14px; border-radius: var(--radius);
+    border: 1px solid var(--line-strong); background: var(--surface); cursor: pointer; font-weight: 600; font-size: 14px; white-space: nowrap; }
+  .btn:hover { background: var(--surface-2); }
+  a.btn { text-decoration: none; color: var(--ink); }
+  a { color: var(--info); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-primary { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+  .btn-primary:hover { background: color-mix(in srgb, var(--ink) 85%, var(--bg)); }
+  .btn-ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .btn-ok:hover { background: color-mix(in srgb, var(--ok) 85%, #000); }
+  .btn-danger { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 45%, var(--line)); }
+  .btn-sm { padding: 4px 10px; font-size: 13px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .error-box { margin-top: 14px; padding: 10px 12px; border-radius: var(--radius); background: var(--crit-soft); color: var(--crit); font-size: 14px; }
+
+  /* App-Gerüst */
+  .app { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: 100%; }
+  .nav { background: var(--surface); border-right: 1px solid var(--line); padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh; }
+  .nav .brand { padding: 0 8px 18px; }
+  .nav a { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: var(--radius); color: var(--ink); text-decoration: none; font-weight: 500; }
+  .nav a:hover { background: var(--surface-2); }
+  .nav a[aria-current="page"] { background: var(--surface-2); font-weight: 650; box-shadow: inset 3px 0 0 var(--ink); }
+  .count { min-width: 22px; padding: 0 7px; border-radius: 11px; font-size: 12px; font-weight: 700; text-align: center; background: var(--surface-2); color: var(--muted); }
+  .count.hot { background: var(--accent); color: #fff; }
+  .nav-foot { margin-top: auto; padding: 12px 8px 0; border-top: 1px solid var(--line); font-size: 13px; }
+  .main { min-width: 0; display: flex; flex-direction: column; }
+  .topbar { display: flex; align-items: center; gap: 14px; padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+  .topbar .spacer { flex: 1; }
+  .topbar select { width: auto; min-width: 170px; }
+  .health { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); }
+  .dot.warn { background: var(--accent); } .dot.crit { background: var(--crit); }
+  .demo-flag { font-size: 12px; font-weight: 700; padding: 3px 8px; border-radius: 4px; background: var(--info-soft); color: var(--info); }
+  .content { padding: 24px; max-width: 1400px; width: 100%; }
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .page-head p { margin: 4px 0 0; color: var(--muted); }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow); }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .panel-body { padding: 16px; }
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; }
+  .seg button { border: 0; background: var(--surface); padding: 6px 12px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); }
+  .seg button + button { border-left: 1px solid var(--line-strong); }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+
+  /* Übersicht: der Durchlauf als Strecke */
+  .flow { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .stage { padding: 18px 16px 16px; position: relative; border-right: 1px solid var(--line); }
+  .stage:last-child { border-right: 0; }
+  .stage::after { content: ""; position: absolute; right: -7px; top: 26px; width: 12px; height: 12px; background: var(--surface);
+    border-top: 1px solid var(--line); border-right: 1px solid var(--line); transform: rotate(45deg); z-index: 1; }
+  .stage:last-child::after { display: none; }
+  .stage .label { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .stage .value { font-size: 32px; font-weight: 700; letter-spacing: -.02em; margin-top: 4px; }
+  .stage .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .stage.attention .value { color: var(--accent); }
+  .grid-2 { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; margin-top: 18px; }
+  .meter { height: 10px; border-radius: 5px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; margin-top: 10px; }
+  .meter > span { display: block; height: 100%; background: var(--ok); }
+  .kv { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; font-size: 14px; }
+  .kv dt { color: var(--muted); } .kv dd { margin: 0; font-weight: 600; text-align: right; }
+  .sys-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; gap: 12px; }
+  .sys-row:last-child { border-bottom: 0; }
+  .big-pct { font-size: 40px; font-weight: 700; letter-spacing: -.02em; }
+
+  /* Tabellen */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 12px; font-weight: 650; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--surface-2); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  tbody tr.click { cursor: pointer; }
+  tbody tr.click:hover { background: var(--surface-2); }
+  td.num, th.num { text-align: right; }
+  .empty { padding: 40px 16px; text-align: center; color: var(--muted); }
+  .status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 650; white-space: nowrap; background: var(--surface-2); color: var(--muted); }
+  .status.review { background: var(--accent-soft); color: var(--accent); }
+  .status.done, .status.approved { background: var(--ok-soft); color: var(--ok); }
+  .status.rejected { background: var(--crit-soft); color: var(--crit); }
+  .status.processing, .status.queued, .status.retry { background: var(--info-soft); color: var(--info); }
+  .reasons { margin: 0; padding-left: 18px; font-size: 13px; }
+  .reasons li + li { margin-top: 2px; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .toolbar input[type=search] { max-width: 320px; }
+  .toolbar select { width: auto; }
+
+  /* Prüfansicht */
+  .review { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+  .viewer { position: sticky; top: 76px; height: calc(100vh - 100px); display: flex; flex-direction: column; }
+  .viewer-body { flex: 1; background: var(--surface-2); display: grid; place-items: center; overflow: auto; border-radius: 0 0 8px 8px; }
+  .viewer-body iframe, .viewer-body object { width: 100%; height: 100%; border: 0; }
+  .viewer-body img { max-width: 100%; display: block; margin: auto; }
+  .viewer-body pre { margin: 0; padding: 16px; white-space: pre-wrap; width: 100%; align-self: start; font-size: 13px; }
+  .reason-box { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 12px 14px; border-radius: 0 var(--radius) var(--radius) 0; }
+  .reason-box h3 { color: var(--accent); margin-bottom: 6px; }
+  .form-section { padding: 16px; border-bottom: 1px solid var(--line); }
+  .form-section:last-child { border-bottom: 0; }
+  .form-section > h3 { margin-bottom: 10px; }
+  .fgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+  .fgrid .wide { grid-column: 1 / -1; }
+  .f { display: grid; gap: 4px; }
+  .f > span { font-size: 12px; font-weight: 600; color: var(--muted); display: flex; gap: 8px; align-items: baseline; justify-content: space-between; }
+  .f.diff input, .f.diff select { border-color: var(--accent); background: var(--accent-soft); }
+  .agent2 { font-weight: 500; color: var(--accent); font-size: 12px; }
+  .conf-low { color: var(--accent); font-weight: 650; }
+  .lines input { padding: 5px 7px; font-size: 13px; }
+  .lines td { padding: 4px 6px; }
+  .lines th { padding: 6px; }
+  .sumcheck { margin-top: 8px; font-size: 13px; font-weight: 600; }
+  .sumcheck.bad { color: var(--crit); } .sumcheck.good { color: var(--ok); }
+  .actions { position: sticky; bottom: 0; display: flex; gap: 10px; flex-wrap: wrap; padding: 14px 16px; background: var(--surface); border-top: 1px solid var(--line); border-radius: 0 0 8px 8px; }
+  .actions .spacer { flex: 1; }
+
+  /* Upload */
+  .drop { border: 2px dashed var(--line-strong); border-radius: 10px; padding: 40px 20px; text-align: center; background: var(--surface); cursor: pointer; }
+  .drop.over { border-color: var(--info); background: var(--info-soft); }
+  .drop strong { display: block; font-size: 16px; margin-bottom: 4px; }
+
+  /* Verlauf und Seitenleiste */
+  .drawer-backdrop { position: fixed; inset: 0; background: rgba(10, 12, 15, .35); z-index: 20; }
+  .drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(640px, 100%); background: var(--surface); z-index: 21; overflow: auto; border-left: 1px solid var(--line); }
+  .drawer-head { position: sticky; top: 0; background: var(--surface); display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .drawer section { padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  .timeline { list-style: none; margin: 0; padding: 0; }
+  .timeline li { position: relative; padding: 0 0 14px 20px; font-size: 14px; }
+  .timeline li::before { content: ""; position: absolute; left: 4px; top: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--line-strong); }
+  .timeline li::after { content: ""; position: absolute; left: 7px; top: 16px; bottom: 0; width: 1px; background: var(--line); }
+  .timeline li:last-child::after { display: none; }
+  .timeline .t { font-size: 12px; color: var(--muted); }
+  pre.json { font-size: 12px; background: var(--surface-2); padding: 10px; border-radius: var(--radius); overflow: auto; max-height: 320px; margin: 0; }
+
+  .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 8px; z-index: 40; font-weight: 600; font-size: 14px; max-width: calc(100% - 32px); }
+  .toast.err { background: var(--crit); color: #fff; }
+  .sev { font-size: 12px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
+  .sev.kritisch { background: var(--crit-soft); color: var(--crit); }
+  .sev.warnung { background: var(--accent-soft); color: var(--accent); }
+  .sev.info { background: var(--info-soft); color: var(--info); }
+  .setting-row { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .setting-row:last-child { border-bottom: 0; }
+  .setting-row .msg { grid-column: 1 / -1; font-size: 13px; }
+
+  @media (max-width: 1100px) {
+    .review { grid-template-columns: 1fr; }
+    .viewer { position: static; height: 60vh; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .stage { border-bottom: 1px solid var(--line); }
+    .stage::after { display: none; }
+  }
+  @media (max-width: 760px) {
+    .app { grid-template-columns: 1fr; }
+    .nav { position: static; height: auto; flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--line); padding: 10px 12px; }
+    .nav .brand, .nav-foot { display: none; }
+    .content { padding: 16px; }
+    .topbar { padding: 10px 16px; }
+    .fgrid { grid-template-columns: 1fr; }
+    .setting-row { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .drawer { animation: slide .18s ease-out; }
+    @keyframes slide { from { transform: translateX(24px); opacity: .6; } }
+  }
+</style>
+</head>
+<body>
+
+<!-- Anmeldung -->
+<div class="login" id="login" hidden>
+  <form class="login-card" id="login-form" autocomplete="off">
+    <div class="brand"><div class="brand-mark">B</div><strong>Belegzentrale</strong></div>
+    <h1>Anmelden</h1>
+    <p class="muted small" style="margin:0">Die Schlüssel bekommen Sie von der IT. Sie werden nur in diesem Browserfenster gespeichert und beim Schließen gelöscht.</p>
+    <div class="field">
+      <label for="l-name">Ihr Name</label>
+      <input type="text" id="l-name" required placeholder="z. B. Anna Huber">
+      <span class="hint">Wird bei jeder Freigabe protokolliert.</span>
+    </div>
+    <div class="field">
+      <label for="l-review">Prüfer-Schlüssel</label>
+      <input type="password" id="l-review" required>
+    </div>
+    <div class="field">
+      <label for="l-upload">Upload-Schlüssel <span class="muted">(optional)</span></label>
+      <input type="password" id="l-upload">
+      <span class="hint">Nur nötig, wenn Sie Belege hier hochladen.</span>
+    </div>
+    <div class="field">
+      <label for="l-admin">Admin-Schlüssel <span class="muted">(optional)</span></label>
+      <input type="password" id="l-admin">
+      <span class="hint">Nur nötig, um Einstellungen zu ändern.</span>
+    </div>
+    <div class="error-box" id="login-error" hidden></div>
+    <div class="row" style="margin-top:20px">
+      <button class="btn btn-primary" type="submit">Anmelden</button>
+      <button class="btn" type="button" id="demo-btn">Demo ansehen</button>
+    </div>
+  </form>
+</div>
+
+<!-- Anwendung -->
+<div class="app" id="app" hidden>
+  <nav class="nav" aria-label="Hauptmenü">
+    <div class="brand"><div class="brand-mark">B</div><strong>Belegzentrale</strong></div>
+    <a href="#uebersicht" data-page="uebersicht">Übersicht</a>
+    <a href="#pruefung" data-page="pruefung">Zur Prüfung <span class="count" id="nav-review">0</span></a>
+    <a href="#dokumente" data-page="dokumente">Dokumente</a>
+    <a href="#hochladen" data-page="hochladen">Hochladen</a>
+    <a href="#exporte" data-page="exporte">Exporte <span class="count" id="nav-exports">0</span></a>
+    <a href="#alarme" data-page="alarme">Alarme</a>
+    <a href="#einstellungen" data-page="einstellungen">Einstellungen</a>
+    <div class="nav-foot">
+      <div class="muted">Angemeldet als</div>
+      <div><strong id="who"></strong></div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn btn-sm" id="theme-btn" type="button">Hell/Dunkel</button>
+        <button class="btn btn-sm" id="logout-btn" type="button">Abmelden</button>
+      </div>
+    </div>
+  </nav>
+  <div class="main">
+    <header class="topbar">
+      <label class="small muted" for="mandant">Gesellschaft</label>
+      <select id="mandant"><option value="">Alle Gesellschaften</option></select>
+      <span class="spacer"></span>
+      <span class="demo-flag" id="demo-flag" hidden>Demo mit Beispieldaten</span>
+      <span class="health" id="health"><span class="dot"></span><span>Verbinde …</span></span>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+
+<div id="drawer-root"></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+'use strict';
+// ===========================================================================
+// Hilfsfunktionen
+// ===========================================================================
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtNum = (n, d = 0) => (n == null || n === '' || Number.isNaN(Number(n)) ? '–' : Number(n).toLocaleString('de-AT', { minimumFractionDigits: d, maximumFractionDigits: d }));
+const fmtMoney = (n, cur = 'EUR') => (n == null || n === '' ? '–' : Number(n).toLocaleString('de-AT', { style: 'currency', currency: /^[A-Z]{3}$/.test(cur || '') ? cur : 'EUR' }));
+const fmtDate = (s) => (s ? new Date(s).toLocaleString('de-AT', { dateStyle: 'short', timeStyle: 'short' }) : '–');
+const fmtDay = (s) => (s ? new Date(s.length === 10 ? s + 'T00:00:00' : s).toLocaleDateString('de-AT') : '–');
+const ago = (s) => {
+  const m = Math.round((Date.now() - new Date(s).getTime()) / 60000);
+  if (m < 1) return 'gerade eben'; if (m < 60) return `vor ${m} Min.`;
+  const h = Math.round(m / 60); if (h < 48) return `vor ${h} Std.`;
+  return `vor ${Math.round(h / 24)} Tagen`;
+};
+const STATUS = { queued: 'Wartet', processing: 'In Arbeit', retry: 'Neuer Versuch', review: 'Zur Prüfung', approved: 'Freigegeben', done: 'Erledigt', rejected: 'Abgelehnt' };
+const TYPES = { bestellung: 'Bestellung', auftragsbestaetigung: 'Auftragsbestätigung', lieferschein: 'Lieferschein', rechnung: 'Rechnung', gutschrift: 'Gutschrift', angebot: 'Angebot', anfrage: 'Anfrage', sonstiges: 'Sonstiges' };
+const EVENTS = { empfangen: 'Empfangen', duplikat_empfangen: 'Erneut empfangen (Duplikat)', verarbeitung_gestartet: 'Verarbeitung gestartet', neuer_versuch_geplant: 'Neuer Versuch geplant',
+  automatisch_freigegeben: 'Automatisch freigegeben', zur_pruefung: 'Zur Prüfung', an_mensch_uebergeben: 'An Prüfung übergeben', pruefentscheidung: 'Prüfentscheidung',
+  erste_freigabe: 'Erste Freigabe (Vier-Augen)', exportiert: 'Exportiert', export_fehlgeschlagen: 'Export fehlgeschlagen', export_erneut_angestossen: 'Export erneut angestoßen',
+  haengend_zurueckgeholt: 'Hängende Verarbeitung zurückgeholt', ergebnis_verworfen: 'Verspätetes Ergebnis verworfen' };
+const statusTag = (s) => `<span class="status ${esc(s)}">${esc(STATUS[s] || s)}</span>`;
+
+function toast(msg, isErr = false) {
+  const t = $('#toast');
+  t.textContent = msg; t.className = 'toast' + (isErr ? ' err' : ''); t.hidden = false;
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => { t.hidden = true; }, isErr ? 6000 : 3500);
+}
+
+const store = {
+  get(k) { try { return sessionStorage.getItem('bz.' + k); } catch (e) { return null; } },
+  set(k, v) { try { v == null ? sessionStorage.removeItem('bz.' + k) : sessionStorage.setItem('bz.' + k, v); } catch (e) { /* ohne Speicher weiter */ } },
+};
+const prefs = {
+  get(k) { try { return localStorage.getItem('bz.' + k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem('bz.' + k, v); } catch (e) { /* */ } },
+};
+
+// ===========================================================================
+// Verbindung zum Backend (n8n). Das Dashboard wird von n8n unter /webhook/dashboard
+// ausgeliefert; alle Schnittstellen liegen daneben.
+// ===========================================================================
+const session = { name: '', keys: { review: '', upload: '', admin: '' }, demo: false };
+// Ausgeliefert von n8n (/webhook/dashboard) oder vom Webserver (/belegzentrale/), die Schnittstellen liegen immer unter /webhook
+const BASE = (location.pathname.match(/^(.*\/webhook(?:-test)?)\//) || [null, '/webhook'])[1];
+
+class ApiError extends Error { constructor(msg, status) { super(msg); this.status = status; } }
+
+async function http(method, path, { key = 'review', body, query, raw, file } = {}) {
+  if (session.demo) return Demo.handle(method, path, { body, query, raw, file });
+  const k = session.keys[key];
+  if (!k) throw new ApiError(key === 'upload' ? 'Für das Hochladen fehlt der Upload-Schlüssel. Bitte neu anmelden.' : key === 'admin' ? 'Zum Ändern der Einstellungen ist der Admin-Schlüssel nötig. Bitte neu anmelden.' : 'Nicht angemeldet.', 401);
+  const url = new URL(`${BASE}/${path}`, location.origin);
+  for (const [a, b] of Object.entries(query || {})) if (b != null && b !== '') url.searchParams.set(a, b);
+  const headers = { 'X-API-Key': k, 'X-Pruefer': session.name };
+  let payload;
+  if (file) { payload = new FormData(); payload.append('datei', file, file.name); if (body && body.mandant) headers['X-Mandant'] = body.mandant; }
+  else if (body) { headers['Content-Type'] = 'application/json'; payload = JSON.stringify(body); }
+  let res;
+  try { res = await fetch(url, { method, headers, body: payload }); }
+  catch (e) { throw new ApiError('Server nicht erreichbar. Bitte Verbindung prüfen.', 0); }
+  if (raw) { if (!res.ok) throw new ApiError(`Dokument konnte nicht geladen werden (HTTP ${res.status}).`, res.status); return res; }
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* kein JSON */ }
+  if (res.status === 401 || res.status === 403) throw new ApiError('Schlüssel ungültig oder ohne Berechtigung für diese Funktion.', res.status);
+  if (!res.ok && !(data && data.fehler)) throw new ApiError(`Unerwartete Antwort vom Server (HTTP ${res.status}).`, res.status);
+  if (data && data.ok === false) throw new ApiError(data.fehler || 'Aktion nicht möglich.', res.status);
+  return data;
+}
+
+// ===========================================================================
+// Anmeldung
+// ===========================================================================
+function showLogin(err) {
+  $('#app').hidden = true; $('#login').hidden = false;
+  $('#l-name').value = session.name || '';
+  const box = $('#login-error'); box.hidden = !err; box.textContent = err || '';
+}
+async function startApp() {
+  $('#login').hidden = true; $('#app').hidden = false;
+  $('#who').textContent = session.name; $('#demo-flag').hidden = !session.demo;
+  await refreshStatus();
+  route();
+}
+$('#login-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  session.name = $('#l-name').value.trim();
+  session.keys = { review: $('#l-review').value.trim(), upload: $('#l-upload').value.trim(), admin: $('#l-admin').value.trim() };
+  session.demo = false;
+  try {
+    await http('GET', 'status');
+    store.set('session', JSON.stringify(session));
+    startApp();
+  } catch (err) { showLogin(err.message); }
+});
+$('#demo-btn').addEventListener('click', () => {
+  session.name = $('#l-name').value.trim() || 'Anna Huber'; session.demo = true; session.keys = { review: 'demo', upload: 'demo', admin: 'demo' };
+  store.set('session', JSON.stringify(session));
+  startApp();
+});
+$('#logout-btn').addEventListener('click', () => { store.set('session', null); session.keys = { review: '', upload: '', admin: '' }; location.hash = ''; showLogin(); });
+$('#theme-btn').addEventListener('click', () => {
+  const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next; prefs.set('theme', next);
+});
+
+// ===========================================================================
+// Kopfzeile: Gesellschaft und Systemzustand
+// ===========================================================================
+let lastStatus = null;
+const mandant = () => $('#mandant').value || '';
+$('#mandant').addEventListener('change', () => { prefs.set('mandant', mandant()); refreshStatus(); route(); });
+
+async function refreshStatus() {
+  try {
+    const s = await http('GET', 'status', { query: { mandant: mandant() } });
+    lastStatus = s;
+    const sel = $('#mandant'); const cur = sel.value || prefs.get('mandant') || '';
+    sel.innerHTML = '<option value="">Alle Gesellschaften</option>' + (s.mandanten || []).map((m) => `<option value="${esc(m)}">${esc(m)}</option>`).join('');
+    sel.value = (s.mandanten || []).includes(cur) ? cur : '';
+    const nr = $('#nav-review'); nr.textContent = s.zur_pruefung; nr.classList.toggle('hot', Number(s.zur_pruefung) > 0);
+    const ne = $('#nav-exports'); ne.textContent = s.export_fehlgeschlagen; ne.classList.toggle('hot', Number(s.export_fehlgeschlagen) > 0);
+    const crit = s.schutzschalter_offen || Number(s.export_fehlgeschlagen) > 0;
+    const warn = Number(s.warteschlange) > 50;
+    $('#health').innerHTML = `<span class="dot ${crit ? 'crit' : warn ? 'warn' : ''}"></span><span>${crit ? (s.schutzschalter_offen ? 'KI-Dienst gestört, Verarbeitung pausiert' : 'Exporte fehlgeschlagen') : warn ? 'Hohe Auslastung' : 'System läuft normal'}</span>`;
+  } catch (e) {
+    $('#health').innerHTML = `<span class="dot crit"></span><span>${esc(e.message)}</span>`;
+    if (e.status === 401 || e.status === 403) showLogin(e.message);
+  }
+}
+setInterval(() => { if (!$('#app').hidden) refreshStatus(); }, 30000);
+
+// ===========================================================================
+// Navigation
+// ===========================================================================
+const pages = {};
+function route() {
+  const [page, arg] = (location.hash.slice(1) || 'uebersicht').split('/');
+  const p = pages[page] ? page : 'uebersicht';
+  $$('.nav a').forEach((a) => { if (a.dataset.page !== p) a.removeAttribute('aria-current'); else a.setAttribute('aria-current', 'page'); });
+  closeDrawer();
+  const el = $('#content');
+  el.innerHTML = '<div class="empty">Lädt …</div>';
+  pages[p](el, arg ? decodeURIComponent(arg) : null).catch((e) => {
+    el.innerHTML = `<div class="panel"><div class="empty">${esc(e.message)}<div style="margin-top:12px"><button class="btn" onclick="route()">Erneut versuchen</button></div></div></div>`;
+  });
+}
+window.addEventListener('hashchange', route);
+
+// ===========================================================================
+// Übersicht
+// ===========================================================================
+const PRICE = { in: 4 / 1e6, out: 20 / 1e6 }; // Listenpreis USD je Token (Claude Opus 5.5)
+pages.uebersicht = async (el) => {
+  const period = prefs.get('period') || 'heute';
+  const [s, alerts] = await Promise.all([http('GET', 'status', { query: { mandant: mandant() } }), http('GET', 'alarme')]);
+  lastStatus = s;
+  const k = s[period];
+  const cost = (k.ki_tokens_ein * PRICE.in + k.ki_tokens_aus * PRICE.out);
+  const quote = k.automatisierungsquote;
+  el.innerHTML = `
+    <div class="page-head">
+      <div><h1>Übersicht</h1><p>Stand ${esc(fmtDate(s.zeit))}${mandant() ? ' · ' + esc(mandant()) : ''}</p></div>
+      <div class="seg" role="group" aria-label="Zeitraum">
+        ${[['heute', 'Heute'], ['woche', '7 Tage'], ['monat', '30 Tage']].map(([v, l]) => `<button type="button" data-period="${v}" aria-pressed="${v === period}">${l}</button>`).join('')}
+      </div>
+    </div>
+    <section class="panel" aria-label="Durchlauf">
+      <div class="flow">
+        <div class="stage"><div class="label">Eingegangen</div><div class="value">${fmtNum(k.empfangen)}</div><div class="sub">Belege im Zeitraum</div></div>
+        <div class="stage"><div class="label">In Bearbeitung</div><div class="value">${fmtNum(Number(s.warteschlange) + Number(s.in_arbeit))}</div><div class="sub">${fmtNum(s.warteschlange)} wartend, ${fmtNum(s.in_arbeit)} bei der KI</div></div>
+        <div class="stage ${Number(s.zur_pruefung) > 0 ? 'attention' : ''}"><div class="label">Zur Prüfung</div><div class="value">${fmtNum(s.zur_pruefung)}</div><div class="sub"><a href="#pruefung">Prüfliste öffnen</a></div></div>
+        <div class="stage"><div class="label">Freigegeben</div><div class="value">${fmtNum(k.automatisch + k.manuell_freigegeben)}</div><div class="sub">${fmtNum(k.automatisch)} automatisch, ${fmtNum(k.manuell_freigegeben)} manuell</div></div>
+        <div class="stage"><div class="label">Ans ERP übergeben</div><div class="value">${fmtNum(k.erledigt)}</div><div class="sub">${fmtNum(k.abgelehnt)} abgelehnt</div></div>
+      </div>
+    </section>
+    <div class="grid-2">
+      <section class="panel">
+        <div class="panel-head"><h2>Automatisierung</h2><span class="muted small">Anteil ohne menschliche Prüfung</span></div>
+        <div class="panel-body">
+          <div class="big-pct">${quote == null ? '–' : fmtNum(quote, 1) + ' %'}</div>
+          <div class="meter" aria-hidden="true"><span style="width:${Math.min(100, Number(quote) || 0)}%"></span></div>
+          <dl class="kv" style="margin-top:18px">
+            <dt>KI-Aufrufe ausgefallen</dt><dd>${fmtNum(k.ki_ausfaelle)}</dd>
+            <dt>KI-Verbrauch (Eingabe / Ausgabe)</dt><dd>${fmtNum(k.ki_tokens_ein)} / ${fmtNum(k.ki_tokens_aus)} Token</dd>
+            <dt>KI-Kosten (Schätzung nach Listenpreis)</dt><dd>${cost.toLocaleString('de-AT', { style: 'currency', currency: 'USD' })}</dd>
+            <dt>Kosten je Beleg</dt><dd>${k.empfangen ? (cost / k.empfangen).toLocaleString('de-AT', { style: 'currency', currency: 'USD' }) : '–'}</dd>
+          </dl>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><h2>Systemzustand</h2></div>
+        <div class="panel-body">
+          <div class="sys-row"><span>KI-Dienst</span>${s.schutzschalter_offen ? '<span class="sev kritisch">Gestört, pausiert</span>' : '<span class="status done">Verfügbar</span>'}</div>
+          <div class="sys-row"><span>Warteschlange</span><strong>${fmtNum(s.warteschlange)}</strong></div>
+          <div class="sys-row"><span>Fehlgeschlagene Exporte</span>${Number(s.export_fehlgeschlagen) > 0 ? `<a href="#exporte" class="sev kritisch">${fmtNum(s.export_fehlgeschlagen)} offen</a>` : '<strong>0</strong>'}</div>
+          <h3 style="margin:16px 0 6px">Letzte Alarme</h3>
+          ${(alerts.alarme || []).slice(0, 5).map((a) => `<div class="sys-row"><span><span class="sev ${esc(a.stufe)}">${esc(a.stufe)}</span> ${esc(a.meldung)}</span><span class="muted small">${esc(ago(a.zeit))}</span></div>`).join('') || '<p class="muted small">Keine Alarme.</p>'}
+        </div>
+      </section>
+    </div>`;
+  $$('[data-period]', el).forEach((b) => b.addEventListener('click', () => { prefs.set('period', b.dataset.period); route(); }));
+};
+
+// ===========================================================================
+// Prüfliste und Prüfansicht
+// ===========================================================================
+let reviewCache = [];
+pages.pruefung = async (el, jobId) => {
+  const r = await http('GET', 'pruefung/offen', { query: { mandant: mandant() } });
+  reviewCache = r.faelle || [];
+  if (jobId) return renderReview(el, jobId);
+  el.innerHTML = `
+    <div class="page-head"><div><h1>Zur Prüfung</h1><p>${reviewCache.length ? `${reviewCache.length} Beleg(e) warten auf eine Entscheidung. Älteste zuerst.` : 'Nichts zu prüfen.'}</p></div>
+      ${reviewCache.length ? `<button class="btn btn-primary" id="start-review">Prüfung beginnen</button>` : ''}</div>
+    <section class="panel">
+      ${reviewCache.length ? `<div class="table-wrap"><table>
+        <thead><tr><th>Eingang</th><th>Beleg</th><th>Aussteller</th><th class="num">Betrag</th><th>Warum zur Prüfung</th></tr></thead>
+        <tbody>${reviewCache.map((f) => {
+          const d = f.final_data || f.extraction || {};
+          return `<tr class="click" data-job="${esc(f.job_id)}" tabindex="0">
+            <td><div>${esc(ago(f.received_at))}</div><div class="muted small">${esc(f.mandant)}</div></td>
+            <td><div><strong>${esc(TYPES[d.doc_type] || 'Unbekannt')}</strong> ${esc(d.document_number || '')}</div><div class="muted small">${esc(f.filename)}</div></td>
+            <td>${esc((d.issuer || {}).name || '–')}</td>
+            <td class="num">${d.totals && d.totals.gross != null ? esc(fmtMoney(d.totals.gross, d.currency)) : '–'}</td>
+            <td><ul class="reasons">${(f.review_reason || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></td></tr>`;
+        }).join('')}</tbody></table></div>` : '<div class="empty">Alle Belege sind bearbeitet.</div>'}
+    </section>`;
+  const open = (id) => { location.hash = `pruefung/${encodeURIComponent(id)}`; };
+  $$('tr[data-job]', el).forEach((tr) => {
+    tr.addEventListener('click', () => open(tr.dataset.job));
+    tr.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(tr.dataset.job); });
+  });
+  const sb = $('#start-review', el); if (sb) sb.addEventListener('click', () => open(reviewCache[0].job_id));
+};
+
+let docUrl = null;
+async function loadDocInto(container, jobId, mime, filename) {
+  if (docUrl) { URL.revokeObjectURL(docUrl); docUrl = null; }
+  try {
+    const res = await http('GET', 'dokument', { query: { job_id: jobId }, raw: true });
+    const blob = await res.blob();
+    const type = mime || blob.type;
+    docUrl = URL.createObjectURL(new Blob([blob], { type }));
+    if (type === 'application/pdf') container.innerHTML = `<object data="${docUrl}" type="application/pdf" aria-label="Originalbeleg"><p class="empty">PDF kann hier nicht angezeigt werden. <a href="${docUrl}" download="${esc(filename)}">Herunterladen</a></p></object>`;
+    else if (type.startsWith('image/')) container.innerHTML = `<img src="${docUrl}" alt="Originalbeleg">`;
+    else if (type.startsWith('text/') || /xml|json/.test(type)) container.innerHTML = `<pre>${esc(await blob.text())}</pre>`;
+    else container.innerHTML = `<div class="empty">Vorschau für diesen Dateityp nicht möglich. <a href="${docUrl}" download="${esc(filename)}">Datei herunterladen</a></div>`;
+  } catch (e) { container.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+function fieldVal(o, path) { return path.split('.').reduce((a, k) => (a == null ? a : a[k]), o); }
+
+async function renderReview(el, jobId) {
+  const a = (await http('GET', 'auftrag', { query: { job_id: jobId } })).auftrag;
+  if (a.status !== 'review') {
+    el.innerHTML = `<div class="panel"><div class="empty">Dieser Beleg ist nicht mehr in Prüfung (Status: ${esc(STATUS[a.status] || a.status)}).<div style="margin-top:12px"><a class="btn" href="#pruefung">Zur Prüfliste</a></div></div></div>`;
+    return;
+  }
+  const data = structuredClone(a.daten || (a.pruefung && a.pruefung.ok && a.pruefung.data && a.pruefung.data.corrected) || a.extraktion || {});
+  const second = a.pruefung && a.pruefung.ok && a.pruefung.data ? a.pruefung.data.corrected : null;
+  const conf = (a.extraktion && a.extraktion.field_confidence) || {};
+  const idx = reviewCache.findIndex((f) => f.job_id === jobId);
+  const next = reviewCache[idx + 1] || reviewCache.find((f) => f.job_id !== jobId);
+  data.issuer = data.issuer || {}; data.recipient = data.recipient || {}; data.totals = data.totals || {}; data.line_items = data.line_items || [];
+
+  // Orange markiert, wo Auslese-Agent und Prüf-Agent Verschiedenes gelesen haben
+  const first = a.extraktion || {};
+  const show = (v) => (v == null || v === '' ? 'leer' : v);
+  const fld = (label, path, type = 'text', confKey) => {
+    const v = fieldVal(data, path);
+    const v1 = fieldVal(first, path);
+    const v2 = second ? fieldVal(second, path) : undefined;
+    const differs = second && JSON.stringify(v1 ?? null) !== JSON.stringify(v2 ?? null);
+    const c = confKey != null ? conf[confKey] : null;
+    const confHtml = c != null ? `<span class="${c < 0.9 ? 'conf-low' : ''}">Sicherheit ${Math.round(c * 100)} %</span>` : '';
+    const input = type === 'type'
+      ? `<select data-path="${path}">${Object.entries(TYPES).map(([k, l]) => `<option value="${k}" ${k === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`
+      : `<input type="${type}" data-path="${path}" value="${esc(v ?? '')}" ${type === 'number' ? 'step="0.01"' : ''}>`;
+    return `<label class="f ${differs ? 'diff' : ''}"><span>${label} ${confHtml}</span>${input}${differs ? `<span class="agent2">Auslese-Agent: ${esc(show(v1))} · Prüf-Agent: ${esc(show(v2))}</span>` : ''}</label>`;
+  };
+
+  el.innerHTML = `
+    <div class="page-head">
+      <div><h1>${esc(TYPES[data.doc_type] || 'Beleg')} ${esc(data.document_number || '')}</h1>
+        <p>${esc(a.dateiname)} · ${esc(a.mandant)} · eingegangen ${esc(fmtDate(a.empfangen))} über ${esc(a.quelle === 'email' ? 'E-Mail' : a.quelle === 'spool' ? 'Zwischenspeicher' : 'Upload')}</p></div>
+      <div class="row"><span class="muted small">${idx >= 0 ? `Fall ${idx + 1} von ${reviewCache.length}` : ''}</span><a class="btn" href="#pruefung">Zur Liste</a></div>
+    </div>
+    <div class="review">
+      <section class="panel viewer" aria-label="Originalbeleg">
+        <div class="panel-head"><h2>Original</h2><button class="btn btn-sm" id="open-doc" type="button">In neuem Fenster</button></div>
+        <div class="viewer-body" id="viewer"><div class="empty">Lädt …</div></div>
+      </section>
+      <section class="panel" aria-label="Erkannte Daten">
+        <div class="form-section">
+          <div class="reason-box"><h3>Warum ein Mensch entscheiden muss</h3><ul class="reasons">${(a.gruende || []).map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
+          ${a.erste_freigabe ? `<p class="small" style="margin:10px 0 0"><strong>Erste Freigabe durch ${esc(a.erste_freigabe)}.</strong> Für diesen Betrag braucht es eine zweite Person.</p>` : ''}
+          <p class="muted small" id="diff-note" style="margin:10px 0 0" hidden>Orange markiert: Hier haben die beiden KI-Agenten Verschiedenes gelesen. Bitte mit dem Original vergleichen.</p>
+        </div>
+        <form id="data-form">
+          <div class="form-section"><h3>Beleg</h3><div class="fgrid">
+            ${fld('Belegart', 'doc_type', 'type', 'doc_type')}${fld('Belegnummer', 'document_number', 'text', 'document_number')}
+            ${fld('Belegdatum', 'document_date', 'date', 'document_date')}${fld('Fällig am', 'due_date', 'date')}
+            ${fld('Lieferdatum', 'delivery_date', 'date')}${fld('Bestellreferenz', 'order_reference')}
+            ${fld('Währung', 'currency')}${fld('Zahlungsbedingungen', 'payment_terms')}
+          </div></div>
+          <div class="form-section"><h3>Aussteller</h3><div class="fgrid">
+            ${fld('Name', 'issuer.name', 'text', 'issuer')}${fld('UID-Nummer', 'issuer.vat_id')}
+            <div class="wide">${fld('Adresse', 'issuer.address')}</div><div class="wide">${fld('IBAN', 'issuer.iban')}</div>
+          </div></div>
+          <div class="form-section"><h3>Empfänger</h3><div class="fgrid">
+            ${fld('Name', 'recipient.name')}${fld('UID-Nummer', 'recipient.vat_id')}<div class="wide">${fld('Adresse', 'recipient.address')}</div>
+          </div></div>
+          <div class="form-section"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h3>Positionen ${conf.line_items != null ? `<span class="muted small">(Sicherheit ${Math.round(conf.line_items * 100)} %)</span>` : ''}</h3><button class="btn btn-sm" type="button" id="add-line">Position hinzufügen</button></div>
+            <div class="table-wrap"><table class="lines"><thead><tr><th>Pos.</th><th>Artikel</th><th>Beschreibung</th><th class="num">Menge</th><th>Einh.</th><th class="num">Preis</th><th class="num">Netto</th><th class="num">USt %</th><th></th></tr></thead><tbody id="lines"></tbody></table></div>
+          </div>
+          <div class="form-section"><h3>Summen</h3><div class="fgrid">
+            ${fld('Netto', 'totals.net', 'number', 'totals')}${fld('Steuer', 'totals.tax', 'number')}${fld('Brutto', 'totals.gross', 'number')}
+          </div><div class="sumcheck" id="sumcheck"></div></div>
+          <div class="form-section"><details><summary class="small">Technische Details (beide Agenten, Prüfregeln)</summary>
+            <pre class="json" style="margin-top:8px">${esc(JSON.stringify({ pruefregeln: a.validierung, pruef_agent: a.pruefung && a.pruefung.data ? { urteil: a.pruefung.data.verdict, befunde: a.pruefung.data.findings } : a.pruefung, modelle: a.modelle }, null, 2))}</pre></details></div>
+        </form>
+        <div class="actions">
+          <button class="btn btn-ok" id="approve" type="button">Freigeben</button>
+          <button class="btn btn-danger" id="reject" type="button">Ablehnen</button>
+          <button class="btn" id="reprocess" type="button">Erneut von KI verarbeiten</button>
+          <span class="spacer"></span>
+          ${next ? `<a class="btn" href="#pruefung/${encodeURIComponent(next.job_id)}">Überspringen</a>` : ''}
+        </div>
+      </section>
+    </div>`;
+
+  $('#diff-note', el).hidden = !$$('.f.diff', el).length;
+
+  // Positionen
+  const linesEl = $('#lines', el);
+  const lineRow = (l, i) => `<tr data-i="${i}">
+      <td><input data-l="position" value="${esc(l.position ?? '')}" size="3"></td><td><input data-l="article_number" value="${esc(l.article_number ?? '')}" size="8"></td>
+      <td><input data-l="description" value="${esc(l.description ?? '')}"></td><td><input data-l="quantity" type="number" step="any" value="${esc(l.quantity ?? '')}" size="5"></td>
+      <td><input data-l="unit" value="${esc(l.unit ?? '')}" size="4"></td><td><input data-l="unit_price" type="number" step="0.01" value="${esc(l.unit_price ?? '')}" size="7"></td>
+      <td><input data-l="net_amount" type="number" step="0.01" value="${esc(l.net_amount ?? '')}" size="8"></td><td><input data-l="tax_rate" type="number" step="any" value="${esc(l.tax_rate ?? '')}" size="3"></td>
+      <td><button class="btn btn-sm" type="button" data-del="${i}" aria-label="Position entfernen">✕</button></td></tr>`;
+  const renderLines = () => { linesEl.innerHTML = data.line_items.map(lineRow).join('') || '<tr><td colspan="9" class="muted small">Keine Positionen</td></tr>'; checkSums(); };
+  const num = (v) => (v === '' || v == null ? null : Number(v));
+  function readForm() {
+    $$('[data-path]', el).forEach((inp) => {
+      const path = inp.dataset.path.split('.'); let o = data;
+      for (let i = 0; i < path.length - 1; i++) o = o[path[i]] = o[path[i]] || {};
+      const raw = inp.value.trim();
+      o[path[path.length - 1]] = inp.type === 'number' ? num(raw) : (raw === '' ? null : raw);
+    });
+    $$('#lines tr[data-i]', el).forEach((tr) => {
+      const l = data.line_items[Number(tr.dataset.i)];
+      $$('[data-l]', tr).forEach((inp) => { l[inp.dataset.l] = inp.type === 'number' ? num(inp.value) : (inp.value.trim() || (inp.dataset.l === 'description' ? '' : null)); });
+    });
+    return data;
+  }
+  function checkSums() {
+    readForm();
+    const t = data.totals; const box = $('#sumcheck', el); const msgs = [];
+    if (t.net != null && t.tax != null && t.gross != null && Math.abs(t.net + t.tax - t.gross) > 0.05) msgs.push(`Netto + Steuer = ${fmtNum(t.net + t.tax, 2)}, Brutto ist ${fmtNum(t.gross, 2)}`);
+    const nets = data.line_items.map((l) => l.net_amount).filter((n) => n != null);
+    if (nets.length && nets.length === data.line_items.length && t.net != null) {
+      const sum = nets.reduce((x, y) => x + y, 0);
+      if (Math.abs(sum - t.net) > 0.05) msgs.push(`Positionen ergeben ${fmtNum(sum, 2)}, Netto ist ${fmtNum(t.net, 2)}`);
+    }
+    box.className = 'sumcheck ' + (msgs.length ? 'bad' : 'good');
+    box.textContent = msgs.length ? msgs.join(' · ') : 'Summen stimmen.';
+  }
+  renderLines();
+  // Am Formular selbst lauschen (nicht am Seitencontainer), damit beim Wechsel zum nächsten Fall nichts nachwirkt
+  $('#data-form', el).addEventListener('input', (e) => { if (e.target.matches('[data-path^="totals"], [data-l]')) checkSums(); });
+  $('#add-line', el).addEventListener('click', () => { readForm(); data.line_items.push({ position: String(data.line_items.length + 1), article_number: null, description: '', quantity: null, unit: null, unit_price: null, net_amount: null, tax_rate: 20 }); renderLines(); });
+  linesEl.addEventListener('click', (e) => { const b = e.target.closest('[data-del]'); if (!b) return; readForm(); data.line_items.splice(Number(b.dataset.del), 1); renderLines(); });
+
+  loadDocInto($('#viewer', el), jobId, a.mime_type, a.dateiname);
+  $('#open-doc', el).addEventListener('click', () => { if (docUrl) window.open(docUrl, '_blank'); });
+
+  const decide = async (entscheidung, btn) => {
+    if (entscheidung === 'ablehnen' && !confirm('Beleg ablehnen? Er wird nicht ans ERP übergeben.')) return;
+    $$('.actions button', el).forEach((b) => { b.disabled = true; });
+    const label = btn.textContent; btn.textContent = 'Wird gespeichert …';
+    try {
+      const body = { job_id: jobId, token: a.review_token, entscheidung, pruefer: session.name };
+      if (entscheidung === 'freigeben') body.daten = readForm();
+      const r = await http('POST', 'pruefung/entscheidung', { body });
+      toast(r.entscheidung === 'erste_freigabe' ? 'Erste Freigabe gespeichert. Eine zweite Person muss noch freigeben.'
+        : entscheidung === 'freigeben' ? 'Freigegeben. Wird ans ERP übergeben.' : entscheidung === 'ablehnen' ? 'Abgelehnt.' : 'Wird erneut verarbeitet.');
+      await refreshStatus();
+      location.hash = next && next.job_id !== jobId ? `pruefung/${encodeURIComponent(next.job_id)}` : 'pruefung';
+    } catch (e) {
+      toast(e.message, true);
+      $$('.actions button', el).forEach((b) => { b.disabled = false; }); btn.textContent = label;
+    }
+  };
+  $('#approve', el).addEventListener('click', (e) => decide('freigeben', e.currentTarget));
+  $('#reject', el).addEventListener('click', (e) => decide('ablehnen', e.currentTarget));
+  $('#reprocess', el).addEventListener('click', (e) => decide('erneut_verarbeiten', e.currentTarget));
+}
+
+// ===========================================================================
+// Dokumente mit Suche und Detailansicht
+// ===========================================================================
+pages.dokumente = async (el) => {
+  const q = { suche: prefs.get('suche') || '', status: prefs.get('status') || '' };
+  el.innerHTML = `
+    <div class="page-head"><div><h1>Dokumente</h1><p>Alle eingegangenen Belege mit Status und Verlauf.</p></div></div>
+    <section class="panel">
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="Dateiname, Belegnummer oder Aussteller" value="${esc(q.suche)}" aria-label="Suche">
+        <select id="st" aria-label="Status"><option value="">Alle Status</option>${Object.entries(STATUS).map(([k, l]) => `<option value="${k}" ${k === q.status ? 'selected' : ''}>${l}</option>`).join('')}</select>
+        <span class="muted small" id="cnt"></span>
+      </div>
+      <div class="table-wrap" id="tbl"><div class="empty">Lädt …</div></div>
+    </section>`;
+  const load = async () => {
+    prefs.set('suche', $('#q', el).value); prefs.set('status', $('#st', el).value);
+    const r = await http('GET', 'dokumente', { query: { mandant: mandant(), suche: $('#q', el).value.trim(), status: $('#st', el).value } });
+    const list = r.dokumente || [];
+    $('#cnt', el).textContent = `${list.length} Treffer${list.length >= 200 ? ' (die neuesten 200)' : ''}`;
+    $('#tbl', el).innerHTML = list.length ? `<table><thead><tr><th>Eingang</th><th>Beleg</th><th>Aussteller</th><th class="num">Betrag</th><th>Status</th><th>Freigabe</th><th>ERP</th></tr></thead><tbody>
+      ${list.map((d) => `<tr class="click" data-job="${esc(d.job_id)}" tabindex="0">
+        <td><div>${esc(fmtDate(d.empfangen))}</div><div class="muted small">${esc(d.mandant)}</div></td>
+        <td><div><strong>${esc(TYPES[d.typ] || '–')}</strong> ${esc(d.belegnummer || '')}</div><div class="muted small">${esc(d.dateiname)}</div></td>
+        <td>${esc(d.aussteller || '–')}</td><td class="num">${d.brutto != null ? esc(fmtMoney(d.brutto, d.waehrung)) : '–'}</td>
+        <td>${statusTag(d.status)}</td><td class="small">${esc(d.freigabe || '–')}</td>
+        <td class="small">${d.export === 'sent' ? 'Übergeben' : d.export === 'failed' ? '<span class="sev kritisch">Fehlgeschlagen</span>' : d.export ? 'Läuft' : '–'}</td></tr>`).join('')}
+      </tbody></table>` : '<div class="empty">Keine Belege gefunden.</div>';
+    $$('tr[data-job]', el).forEach((tr) => {
+      tr.addEventListener('click', () => openDetail(tr.dataset.job));
+      tr.addEventListener('keydown', (e) => { if (e.key === 'Enter') openDetail(tr.dataset.job); });
+    });
+  };
+  let timer;
+  $('#q', el).addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => load().catch((e) => toast(e.message, true)), 300); });
+  $('#st', el).addEventListener('change', () => load().catch((e) => toast(e.message, true)));
+  await load();
+};
+
+function closeDrawer() { $('#drawer-root').innerHTML = ''; }
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+
+async function openDetail(jobId) {
+  const root = $('#drawer-root');
+  root.innerHTML = '<div class="drawer-backdrop"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Belegdetails"><div class="empty">Lädt …</div></aside>';
+  $('.drawer-backdrop', root).addEventListener('click', closeDrawer);
+  try {
+    const a = (await http('GET', 'auftrag', { query: { job_id: jobId } })).auftrag;
+    const d = a.daten || a.extraktion || {};
+    $('.drawer', root).innerHTML = `
+      <div class="drawer-head"><div><h2>${esc(TYPES[d.doc_type] || 'Beleg')} ${esc(d.document_number || '')}</h2><div class="muted small">${esc(a.dateiname)}</div></div>
+        <div class="row">${a.status === 'review' ? `<a class="btn btn-primary btn-sm" href="#pruefung/${encodeURIComponent(jobId)}">Prüfen</a>` : ''}<button class="btn btn-sm" id="dl" type="button">Original</button><button class="btn btn-sm" id="close" type="button" aria-label="Schließen">✕</button></div></div>
+      <section><dl class="kv">
+        <dt>Status</dt><dd>${statusTag(a.status)}</dd>
+        <dt>Gesellschaft</dt><dd>${esc(a.mandant)}</dd>
+        <dt>Aussteller</dt><dd>${esc((d.issuer || {}).name || '–')}</dd>
+        <dt>Betrag brutto</dt><dd>${d.totals && d.totals.gross != null ? esc(fmtMoney(d.totals.gross, d.currency)) : '–'}</dd>
+        <dt>Belegdatum</dt><dd>${esc(fmtDay(d.document_date))}</dd>
+        <dt>Freigabe</dt><dd>${esc(a.freigegeben_von || (['approved', 'done'].includes(a.status) ? 'automatisch' : '–'))}</dd>
+        <dt>ERP-Übergabe</dt><dd>${a.export ? (a.export.status === 'sent' ? 'Übergeben ' + esc(fmtDate(a.export.gesendet)) : a.export.status === 'failed' ? '<span class="sev kritisch">Fehlgeschlagen</span>' : 'Läuft') : '–'}</dd>
+        <dt>KI-Modelle</dt><dd>${esc((a.modelle || []).join(', ') || '–')}</dd>
+        <dt>Aufbewahren bis</dt><dd>${esc(fmtDay(a.aufbewahren_bis))}</dd>
+      </dl>
+      ${a.gruende && a.gruende.length ? `<div class="reason-box" style="margin-top:14px"><h3>Prüfgründe</h3><ul class="reasons">${a.gruende.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
+      ${a.letzter_fehler ? `<p class="small" style="margin-top:12px"><strong>Letzter Fehler:</strong> ${esc(a.letzter_fehler)}</p>` : ''}
+      ${a.export && a.export.status === 'failed' ? `<button class="btn btn-sm" id="requeue" style="margin-top:12px" type="button">Export erneut senden</button>` : ''}</section>
+      <section><h3 style="margin-bottom:12px">Verlauf</h3><ol class="timeline">
+        ${(a.verlauf || []).map((ev) => `<li><div><strong>${esc(EVENTS[ev.ereignis] || ev.ereignis)}</strong>${ev.von && ev.von !== 'system' ? ` · ${esc(ev.von)}` : ''}</div>
+          <div class="t">${esc(fmtDate(ev.zeit))}</div>${ev.details && Object.keys(ev.details).length ? `<div class="muted small">${esc(Object.entries(ev.details).filter(([k]) => k !== 'sha256').map(([k, v]) => `${k}: ${typeof v === 'object' ? JSON.stringify(v) : v}`).join(' · ').slice(0, 300))}</div>` : ''}</li>`).join('')}
+      </ol></section>
+      <section><details><summary class="small">Erkannte Daten (JSON)</summary><pre class="json" style="margin-top:8px">${esc(JSON.stringify(d, null, 2))}</pre></details></section>`;
+    $('#close', root).addEventListener('click', closeDrawer);
+    $('#close', root).focus();
+    $('#dl', root).addEventListener('click', async () => {
+      try {
+        const res = await http('GET', 'dokument', { query: { job_id: jobId }, raw: true });
+        const url = URL.createObjectURL(new Blob([await res.blob()], { type: a.mime_type }));
+        window.open(url, '_blank'); setTimeout(() => URL.revokeObjectURL(url), 60000);
+      } catch (e) { toast(e.message, true); }
+    });
+    const rq = $('#requeue', root);
+    if (rq) rq.addEventListener('click', async () => { try { await http('POST', 'export/erneut', { body: { job_id: jobId } }); toast('Export wird erneut gesendet.'); openDetail(jobId); refreshStatus(); } catch (e) { toast(e.message, true); } });
+  } catch (e) { $('.drawer', root).innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+
+// ===========================================================================
+// Hochladen
+// ===========================================================================
+pages.hochladen = async (el) => {
+  const ms = (lastStatus && lastStatus.mandanten) || [];
+  el.innerHTML = `
+    <div class="page-head"><div><h1>Belege hochladen</h1><p>PDF, Bild (JPG, PNG), Text, CSV oder XML. Jede Datei wird einzeln angenommen und automatisch verarbeitet.</p></div></div>
+    <section class="panel"><div class="panel-body">
+      <div class="field" style="margin-top:0;max-width:340px"><label for="up-m">Gesellschaft</label>
+        <input type="text" id="up-m" list="up-ml" value="${esc(mandant() || ms[0] || '')}" placeholder="z. B. bau-ag"><datalist id="up-ml">${ms.map((m) => `<option value="${esc(m)}">`).join('')}</datalist></div>
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Dateien auswählen oder hierher ziehen" style="margin-top:16px">
+        <strong>Dateien hierher ziehen</strong><span class="muted">oder klicken, um auszuwählen</span>
+        <input type="file" id="files" multiple hidden accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,.txt,.csv,.xml,.json,.html,.eml">
+      </div>
+    </div>
+    <div class="table-wrap"><table><thead><tr><th>Datei</th><th>Ergebnis</th><th></th></tr></thead><tbody id="up-res"><tr><td colspan="3" class="muted small">Noch nichts hochgeladen.</td></tr></tbody></table></div></section>`;
+  const drop = $('#drop', el); const input = $('#files', el); const res = $('#up-res', el);
+  let first = true;
+  const upload = async (files) => {
+    const m = $('#up-m', el).value.trim();
+    if (!m) { toast('Bitte zuerst die Gesellschaft angeben.', true); return; }
+    if (first) { res.innerHTML = ''; first = false; }
+    for (const f of files) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${esc(f.name)}<div class="muted small">${fmtNum(f.size / 1024, 0)} KB</div></td><td>Wird hochgeladen …</td><td></td>`;
+      res.prepend(tr);
+      try {
+        const r = await http('POST', 'dokument-eingang', { key: 'upload', file: f, body: { mandant: m } });
+        tr.children[1].innerHTML = r.duplikat ? '<span class="status">Bereits vorhanden</span> Diese Datei wurde schon einmal empfangen.'
+          : r.status === 'zwischengespeichert' ? '<span class="status review">Zwischengespeichert</span> Wird automatisch verarbeitet, sobald die Datenbank erreichbar ist.'
+          : `<span class="status done">Angenommen</span> ${r.status === 'review' ? 'Direkt zur Prüfung.' : 'Wird verarbeitet.'}`;
+        if (r.job_id) tr.children[2].innerHTML = `<button class="btn btn-sm" type="button">Details</button>`;
+        if (r.job_id) tr.children[2].firstChild.addEventListener('click', () => openDetail(r.job_id));
+      } catch (e) { tr.children[1].innerHTML = `<span class="sev kritisch">Fehler</span> ${esc(e.message)}`; }
+    }
+    refreshStatus();
+  };
+  drop.addEventListener('click', () => input.click());
+  drop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+  input.addEventListener('change', () => { upload([...input.files]); input.value = ''; });
+  ['dragenter', 'dragover'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', (e) => upload([...e.dataTransfer.files]));
+};
+
+// ===========================================================================
+// Exporte
+// ===========================================================================
+pages.exporte = async (el) => {
+  const r = await http('GET', 'exporte/fehlgeschlagen', { query: { mandant: mandant() } });
+  const list = r.exporte || [];
+  el.innerHTML = `
+    <div class="page-head"><div><h1>Fehlgeschlagene Exporte</h1><p>Belege, die nach allen Versuchen nicht ans ERP übergeben werden konnten. Ursache beheben, dann erneut senden.</p></div></div>
+    <section class="panel">${list.length ? `<div class="table-wrap"><table><thead><tr><th>Beleg</th><th>Versuche</th><th>Fehler</th><th>Exportdatei</th><th></th></tr></thead><tbody>
+      ${list.map((x) => `<tr><td><a href="#" data-detail="${esc(x.job_id)}">${esc(x.dateiname)}</a><div class="muted small">${esc(x.mandant)} · seit ${esc(fmtDate(x.seit))}</div></td>
+        <td class="num">${fmtNum(x.versuche)}</td><td class="small">${esc(x.fehler || '–')}</td><td class="small">${x.datei_geschrieben ? 'Abgelegt' : 'Nein'}</td>
+        <td><button class="btn btn-sm" data-requeue="${esc(x.job_id)}" type="button">Erneut senden</button></td></tr>`).join('')}
+      </tbody></table></div>` : '<div class="empty">Keine fehlgeschlagenen Exporte.</div>'}</section>`;
+  $$('[data-detail]', el).forEach((a) => a.addEventListener('click', (e) => { e.preventDefault(); openDetail(a.dataset.detail); }));
+  $$('[data-requeue]', el).forEach((b) => b.addEventListener('click', async () => {
+    b.disabled = true;
+    try { await http('POST', 'export/erneut', { body: { job_id: b.dataset.requeue } }); toast('Export wird erneut gesendet.'); await refreshStatus(); route(); }
+    catch (e) { toast(e.message, true); b.disabled = false; }
+  }));
+};
+
+// ===========================================================================
+// Alarme
+// ===========================================================================
+pages.alarme = async (el) => {
+  const r = await http('GET', 'alarme');
+  const sev = prefs.get('sev') || '';
+  const list = (r.alarme || []).filter((a) => !sev || a.stufe === sev);
+  el.innerHTML = `
+    <div class="page-head"><div><h1>Alarme</h1><p>Meldungen des Systems. Gleiche Meldungen werden innerhalb von 30 Minuten nur einmal verschickt.</p></div>
+      <div class="seg" role="group" aria-label="Stufe">${[['', 'Alle'], ['kritisch', 'Kritisch'], ['warnung', 'Warnung'], ['info', 'Info']].map(([v, l]) => `<button type="button" data-sev="${v}" aria-pressed="${v === sev}">${l}</button>`).join('')}</div></div>
+    <section class="panel">${list.length ? `<div class="table-wrap"><table><thead><tr><th>Zeit</th><th>Stufe</th><th>Meldung</th><th>Zugestellt über</th></tr></thead><tbody>
+      ${list.map((a) => `<tr><td class="small">${esc(fmtDate(a.zeit))}</td><td><span class="sev ${esc(a.stufe)}">${esc(a.stufe)}</span></td><td>${esc(a.meldung)}</td>
+        <td class="small">${a.unterdrueckt ? 'Zusammengefasst' : esc((a.zugestellt || []).map((c) => ({ webhook: 'Teams/Slack', email: 'E-Mail', datei: 'Datei' }[c] || c)).join(', ') || 'Ausstehend')}</td></tr>`).join('')}
+      </tbody></table></div>` : '<div class="empty">Keine Alarme.</div>'}</section>`;
+  $$('[data-sev]', el).forEach((b) => b.addEventListener('click', () => { prefs.set('sev', b.dataset.sev); route(); }));
+};
+
+// ===========================================================================
+// Einstellungen
+// ===========================================================================
+const SETTINGS = [
+  ['confidence_auto', 'Sicherheitsschwelle der KI', 'Unter diesem Wert (0,5 bis 1) wird der Prüf-Agent eingeschaltet.', 'number'],
+  ['verify_above_gross', 'Prüf-Agent ab Betrag (€)', 'Ab diesem Bruttobetrag liest immer ein zweiter Agent gegen.', 'number'],
+  ['review_above_gross', 'Freigabegrenze (€)', 'Ab diesem Betrag entscheiden immer zwei Personen.', 'number'],
+  ['always_verify_types', 'Immer gegenprüfen', 'Belegarten, die immer der Prüf-Agent sieht (mit Komma getrennt).', 'list'],
+  ['model_primary', 'Hauptmodell', 'Claude-Modell für Auslesen und Prüfen.', 'text'],
+  ['model_secondary', 'Ersatzmodell', 'Wird bei Ausfall des Hauptmodells verwendet.', 'text'],
+  ['export_mode', 'Exportweg', 'http = nur ERP, file = nur Datei, both = beides.', 'text'],
+  ['erp_url', 'ERP-Adresse', 'Hierhin werden freigegebene Belege übergeben.', 'text'],
+  ['alert_webhook_url', 'Teams/Slack-Webhook', 'Für Alarme.', 'text'],
+  ['alert_email_to', 'Alarm-E-Mail', 'Empfänger für Alarme und Tagesbericht.', 'text'],
+  ['alert_email_from', 'Absender-Adresse', '', 'text'],
+  ['heartbeat_url', 'Totmann-Schalter', 'Externer Dienst, der Alarm schlägt, wenn das Lebenszeichen ausbleibt.', 'text'],
+  ['stale_queue_minutes', 'Stau-Alarm nach (Minuten)', 'Alarm, wenn ein Beleg länger wartet.', 'number'],
+  ['max_attempts', 'Maximale Versuche', 'Danach geht ein Beleg mit technischem Fehler an die Prüfung.', 'number'],
+];
+pages.einstellungen = async (el) => {
+  const r = await http('GET', 'einstellungen');
+  const cur = r.einstellungen || {};
+  const canEdit = !!session.keys.admin;
+  el.innerHTML = `
+    <div class="page-head"><div><h1>Einstellungen</h1><p>${canEdit ? 'Änderungen gelten sofort und werden als Alarm protokolliert.' : 'Nur lesbar. Zum Ändern mit Admin-Schlüssel anmelden.'}</p></div></div>
+    <section class="panel">${SETTINGS.filter(([k]) => k in cur).map(([k, label, hint, type]) => {
+      const v = cur[k];
+      const shown = type === 'list' ? (v || []).join(', ') : v;
+      return `<div class="setting-row" data-key="${k}" data-type="${type}">
+        <div><strong>${esc(label)}</strong><div class="muted small">${esc(hint)}</div></div>
+        <input type="${type === 'number' ? 'number' : 'text'}" ${type === 'number' ? 'step="any"' : ''} value="${esc(shown)}" ${canEdit ? '' : 'disabled'} aria-label="${esc(label)}">
+        <button class="btn btn-sm" type="button" ${canEdit ? '' : 'disabled'}>Speichern</button>
+        <div class="msg" hidden></div></div>`;
+    }).join('')}</section>`;
+  $$('.setting-row', el).forEach((row) => {
+    const btn = $('button', row); const inp = $('input', row); const msg = $('.msg', row);
+    btn.addEventListener('click', async () => {
+      const t = row.dataset.type; let wert = inp.value.trim();
+      if (t === 'number') { wert = Number(wert.replace(',', '.')); if (!Number.isFinite(wert)) { msg.hidden = false; msg.className = 'msg sumcheck bad'; msg.textContent = 'Bitte eine Zahl eingeben.'; return; } }
+      if (t === 'list') wert = wert.split(',').map((x) => x.trim()).filter(Boolean);
+      btn.disabled = true;
+      try { await http('POST', 'einstellungen', { key: 'admin', body: { schluessel: row.dataset.key, wert, pruefer: session.name } }); msg.hidden = false; msg.className = 'msg sumcheck good'; msg.textContent = 'Gespeichert.'; }
+      catch (e) { msg.hidden = false; msg.className = 'msg sumcheck bad'; msg.textContent = e.message; }
+      btn.disabled = false;
+    });
+  });
+};
+
+// ===========================================================================
+// Demo: simuliert das Backend vollständig im Browser, mit denselben Regeln
+// (Vier-Augen-Prinzip, Token, Einstellungen-Prüfung). Nichts verlässt den Browser.
+// ===========================================================================
+const Demo = (() => {
+  const now = Date.now();
+  const iso = (minAgo) => new Date(now - minAgo * 60000).toISOString();
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'x'.repeat(8).replace(/x/g, () => Math.floor(Math.random() * 16).toString(16)) + '-demo');
+  const party = (name, vat, iban, address) => ({ name, vat_id: vat, iban, address });
+  const doc = (o) => ({ doc_type: 'rechnung', language: 'de', recipient: party('Hochbau Mitte GmbH', 'ATU12345675', null, 'Industriezeile 8, 4020 Linz'), order_reference: null,
+    delivery_date: null, due_date: null, currency: 'EUR', payment_terms: '30 Tage netto', anomalies: [], summary: '',
+    field_confidence: { doc_type: 0.99, issuer: 0.98, document_number: 0.97, document_date: 0.97, line_items: 0.95, totals: 0.98 }, ...o });
+  const lines = (...l) => l.map(([d, q, u, p], i) => ({ position: String(i + 1), article_number: `A-${100 + i}`, description: d, quantity: q, unit: u, unit_price: p, net_amount: Math.round(q * p * 100) / 100, tax_rate: 20 }));
+  const tot = (ls) => { const n = Math.round(ls.reduce((a, l) => a + l.net_amount, 0) * 100) / 100; const t = Math.round(n * 20) / 100; return { net: n, tax: t, gross: Math.round((n + t) * 100) / 100 }; };
+  const settings = { confidence_auto: 0.9, verify_above_gross: 1000, review_above_gross: 50000, always_verify_types: ['rechnung', 'gutschrift'], model_primary: 'claude-opus-5-5',
+    model_secondary: 'claude-sonnet-5-5', export_mode: 'both', erp_url: 'https://erp.beispiel.at/api/belege', alert_webhook_url: '', alert_email_to: 'buchhaltung@beispiel.at',
+    alert_email_from: 'belegzentrale@beispiel.at', heartbeat_url: '', stale_queue_minutes: 30, max_attempts: 6 };
+  const jobs = [];
+  const alerts = [];
+  const add = (o) => {
+    const id = uid();
+    const j = { job_id: id, mandant: 'hochbau-mitte', status: 'done', dateiname: 'beleg.pdf', mime_type: 'image/svg+xml', quelle: 'email', empfangen: iso(60), versuche: 1,
+      gruende: null, review_token: uid(), erste_freigabe: null, freigegeben_von: null, extraktion: null, pruefung: null, validierung: { errors: [], warnings: [] },
+      daten: null, modelle: ['claude-opus-5-5'], export: null, verlauf: [], aufbewahren_bis: '2033-12-31', letzter_fehler: null, tokens: [5200, 1900], ...o };
+    j.verlauf.unshift({ zeit: j.empfangen, ereignis: 'empfangen', von: 'system', details: { quelle: j.quelle } });
+    jobs.push(j); return j;
+  };
+  // Beispielbelege
+  const l1 = lines(['Gipskartonplatten 12,5 mm', 120, 'Stk', 8.9], ['CW-Profile 75 mm', 80, 'Stk', 6.4], ['Schnellbauschrauben 3,5×35', 20, 'Pkg', 11.5]);
+  const d1 = doc({ issuer: party('Baustoffhandel Traun GmbH', 'ATU13585627', 'AT61 1904 3002 3457 3201', 'Bahnhofstraße 12, 4050 Traun'), document_number: 'RE-2026-4471', document_date: '2026-10-21', due_date: '2026-11-20', order_reference: 'B-2026-0912', line_items: l1, totals: tot(l1) });
+  const l2 = lines(['Betonpumpe 42 m, Einsatz Baustelle Urfahr', 1, 'Pausch', 2850], ['Anfahrt', 1, 'Pausch', 180]);
+  const d2 = doc({ issuer: party('Pumpendienst Wels OG', 'ATU98765432', 'AT48 3200 0000 1234 5864', 'Gewerbepark 3, 4600 Wels'), document_number: '2026/1187', document_date: '2026-10-22', line_items: l2, totals: tot(l2) });
+  const d2b = structuredClone(d2); d2b.issuer.iban = 'DE89 3704 0044 0532 0130 00';
+  const l3 = lines(['Turmdrehkran Miete Oktober', 1, 'Mon', 46800], ['Kranführer', 160, 'Std', 52]);
+  const d3 = doc({ issuer: party('Kranverleih Hörsching GmbH', 'ATU55667788', 'AT02 2011 1000 0000 1234', 'Flughafenstraße 9, 4063 Hörsching'), document_number: 'KV-26-0331', document_date: '2026-10-20', line_items: l3, totals: tot(l3) });
+  const l4 = lines(['Bewehrungsstahl BSt 550, 12 mm', 4.2, 't', 1180]);
+  const d4 = doc({ issuer: party('Stahlhandel Enns KG', 'ATU44332211', 'AT11 1500 0000 0123 4567', 'Hafenstraße 4, 4470 Enns'), document_number: 'SE-55120', document_date: '2026-10-23', line_items: l4, totals: { net: 4956, tax: 991.2, gross: 5974.2 } });
+  const d4b = structuredClone(d4); d4b.totals = { net: 4956, tax: 991.2, gross: 5947.2 };
+  const d5 = doc({ doc_type: 'lieferschein', issuer: party('Baustoffhandel Traun GmbH', 'ATU13585627', null, 'Bahnhofstraße 12, 4050 Traun'), document_number: 'LS-88213', document_date: '2026-10-24', line_items: lines(['Trockenestrich 25 kg', 60, 'Sack', 0]), totals: { net: null, tax: null, gross: null } });
+  d5.line_items[0].unit_price = null; d5.line_items[0].net_amount = null;
+
+  const svg = (d) => {
+    const L = (d.line_items || []).map((l, i) => `<text x="40" y="${300 + i * 26}" font-size="13">${l.position}  ${l.description}</text><text x="560" y="${300 + i * 26}" font-size="13" text-anchor="end">${l.net_amount ?? ''}</text>`).join('');
+    const x = (s) => String(s ?? '').replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800" viewBox="0 0 600 800" font-family="Arial"><rect width="600" height="800" fill="#fff"/>
+      <text x="40" y="60" font-size="20" font-weight="bold">${x(d.issuer.name)}</text><text x="40" y="82" font-size="12">${x(d.issuer.address)} · UID ${x(d.issuer.vat_id || '')}</text>
+      <text x="40" y="150" font-size="12">${x(d.recipient.name)}</text><text x="40" y="166" font-size="12">${x(d.recipient.address)}</text>
+      <text x="40" y="230" font-size="22" font-weight="bold">${x((TYPES[d.doc_type] || '').toUpperCase())} ${x(d.document_number)}</text><text x="560" y="230" font-size="12" text-anchor="end">Datum ${x(d.document_date)}</text>
+      <line x1="40" y1="270" x2="560" y2="270" stroke="#999"/>${L}
+      <text x="560" y="${360 + (d.line_items || []).length * 26}" font-size="14" text-anchor="end">Netto ${d.totals.net ?? '–'} · USt ${d.totals.tax ?? '–'}</text>
+      <text x="560" y="${384 + (d.line_items || []).length * 26}" font-size="16" font-weight="bold" text-anchor="end">Gesamt EUR ${d.totals.gross ?? '–'}</text>
+      <text x="40" y="740" font-size="11">Bankverbindung: ${x(d.issuer.iban || '–')}</text><text x="40" y="760" font-size="10" fill="#888">Beispielbeleg für die Demo</text></svg>`;
+  };
+
+  add({ dateiname: 'RE-2026-4471.pdf', empfangen: iso(35), extraktion: d1, daten: d1, pruefung: { ok: true, data: { verdict: 'bestaetigt', corrected: d1, findings: [] } },
+    freigegeben_von: null, export: { status: 'sent', versuche: 1, erp: true, datei: true, gesendet: iso(33) }, tokens: [6100, 2300],
+    verlauf: [{ zeit: iso(34), ereignis: 'verarbeitung_gestartet', von: 'system', details: {} }, { zeit: iso(33.5), ereignis: 'automatisch_freigegeben', von: 'system', details: {} }, { zeit: iso(33), ereignis: 'exportiert', von: 'system', details: { erp: true, datei: true } }] });
+  add({ status: 'review', dateiname: 'Rechnung_1187.pdf', empfangen: iso(140), extraktion: d2, daten: d2b, pruefung: { ok: true, data: { verdict: 'korrigiert', corrected: d2b, findings: [{ field: 'issuer.iban', problem: 'IBAN auf dem Beleg weicht vom Briefkopf ab', severity: 'fehler' }] } },
+    gruende: ['Bankverbindung des Ausstellers ist neu (bisher andere IBAN)', 'Agenten uneinig: IBAN des Ausstellers weicht ab', 'Prüf-Agent: issuer.iban: IBAN auf dem Beleg weicht vom Briefkopf ab'],
+    modelle: ['claude-opus-5-5'], verlauf: [{ zeit: iso(139), ereignis: 'zur_pruefung', von: 'system', details: {} }] });
+  add({ status: 'review', mandant: 'hochbau-mitte', dateiname: 'KV-26-0331.pdf', empfangen: iso(95), extraktion: d3, daten: d3, pruefung: { ok: true, data: { verdict: 'bestaetigt', corrected: d3, findings: [] } },
+    gruende: [`Betrag ${d3.totals.gross} über Freigabegrenze 50000: Vier-Augen-Prinzip`], verlauf: [{ zeit: iso(94), ereignis: 'zur_pruefung', von: 'system', details: {} }] });
+  add({ status: 'review', mandant: 'tiefbau-sued', quelle: 'webhook', dateiname: 'scan_0047.jpg', empfangen: iso(20), extraktion: d4, daten: d4b,
+    extraktion_conf: true, pruefung: { ok: true, data: { verdict: 'korrigiert', corrected: d4b, findings: [{ field: 'totals.gross', problem: 'Bruttosumme falsch gelesen (5974,20 statt 5947,20)', severity: 'fehler' }] } },
+    gruende: ['Prüfregel: Summen passen nicht: netto 4956 + Steuer 991.2 ≠ brutto 5974.2', 'Agenten uneinig: Summe gross: 5974.2 / 5947.2'], verlauf: [{ zeit: iso(19), ereignis: 'zur_pruefung', von: 'system', details: {} }] });
+  jobs[jobs.length - 1].extraktion.field_confidence = { ...jobs[jobs.length - 1].extraktion.field_confidence, totals: 0.71 };
+  add({ dateiname: 'LS-88213.pdf', empfangen: iso(12), extraktion: d5, daten: d5, status: 'done', modelle: ['claude-opus-5-5'], tokens: [3100, 900],
+    export: { status: 'failed', versuche: 6, erp: false, datei: true, fehler: 'ERP antwortet HTTP 503: Wartung', gesendet: null },
+    verlauf: [{ zeit: iso(11), ereignis: 'automatisch_freigegeben', von: 'system', details: {} }, { zeit: iso(2), ereignis: 'export_fehlgeschlagen', von: 'system', details: { fehler: 'ERP antwortet HTTP 503' } }] });
+  jobs[jobs.length - 1].status = 'approved';
+  for (let i = 0; i < 38; i++) {
+    const ls = lines(['Baustellenbedarf', 1 + (i % 7), 'Stk', 40 + i * 13]);
+    const d = doc({ issuer: party(['Baustoffhandel Traun GmbH', 'Elektro Leonding GmbH', 'Holzbau Mühlviertel KG', 'Containerdienst Ansfelden'][i % 4], null, null, ''), document_number: `R-${7000 + i}`, document_date: '2026-10-' + String(10 + (i % 14)).padStart(2, '0'), line_items: ls, totals: tot(ls) });
+    add({ dateiname: `R-${7000 + i}.pdf`, empfangen: iso(180 + i * 37), extraktion: d, daten: d, mandant: i % 3 === 0 ? 'tiefbau-sued' : 'hochbau-mitte', quelle: i % 2 ? 'email' : 'webhook',
+      export: { status: 'sent', versuche: 1, erp: true, datei: true, gesendet: iso(178 + i * 37) }, freigegeben_von: i % 5 === 0 ? 'Markus Leitner' : null, tokens: [4800 + i * 40, 1700] });
+  }
+  alerts.push({ id: 3, zeit: iso(2), stufe: 'kritisch', meldung: 'Export für Dokument LS-88213 ist endgültig fehlgeschlagen. Die Daten liegen als Datei bereit.', zugestellt: ['webhook'], unterdrueckt: false });
+  alerts.push({ id: 2, zeit: iso(19), stufe: 'info', meldung: '3 neue Dokumente zur Prüfung, insgesamt 3 offen.', zugestellt: ['webhook'], unterdrueckt: false });
+  alerts.push({ id: 1, zeit: iso(240), stufe: 'warnung', meldung: 'Erhöhte KI-Fehlerquote: 35 % in 15 Minuten. Ersatzmodell wurde verwendet.', zugestellt: ['webhook', 'email'], unterdrueckt: false });
+
+  const err = (fehler, status = 409) => { throw new ApiError(fehler, status); };
+  const byM = (m) => jobs.filter((j) => !m || j.mandant === m);
+  const stats = (m, days) => {
+    const js = byM(m).filter((j) => new Date(j.empfangen) > new Date(now - days * 86400000));
+    const auto = js.filter((j) => ['approved', 'done'].includes(j.status) && !j.freigegeben_von).length;
+    const decided = js.filter((j) => ['approved', 'done', 'review', 'rejected'].includes(j.status)).length;
+    return { empfangen: js.length, erledigt: js.filter((j) => j.status === 'done').length, automatisch: auto,
+      manuell_freigegeben: js.filter((j) => j.freigegeben_von && ['approved', 'done'].includes(j.status)).length,
+      zur_pruefung: js.filter((j) => j.status === 'review').length, abgelehnt: js.filter((j) => j.status === 'rejected').length,
+      automatisierungsquote: decided ? Math.round(1000 * auto / decided) / 10 : null,
+      ki_tokens_ein: js.reduce((a, j) => a + j.tokens[0], 0), ki_tokens_aus: js.reduce((a, j) => a + j.tokens[1], 0), ki_ausfaelle: days >= 1 ? 2 : 0 };
+  };
+  const row = (j) => { const d = j.daten || j.extraktion || {}; return { job_id: j.job_id, mandant: j.mandant, dateiname: j.dateiname, status: j.status, empfangen: j.empfangen, quelle: j.quelle,
+    typ: d.doc_type, belegnummer: d.document_number, aussteller: (d.issuer || {}).name, brutto: (d.totals || {}).gross, waehrung: d.currency,
+    freigabe: ['approved', 'done'].includes(j.status) ? (j.freigegeben_von || 'automatisch') : null, gruende: j.gruende, export: j.export && ({ sent: 'sent', failed: 'failed' }[j.export.status] || 'pending') }; };
+  const findJob = (id) => jobs.find((j) => j.job_id === id) || err('Auftrag nicht gefunden', 404);
+  const log = (j, ereignis, von = 'system', details = {}) => j.verlauf.push({ zeit: new Date().toISOString(), ereignis, von, details });
+  const delay = () => new Promise((r) => setTimeout(r, 150 + Math.random() * 200));
+
+  async function handle(method, path, { body, query, raw, file }) {
+    await delay();
+    const q = query || {}; const m = q.mandant || null;
+    const key = `${method} ${path}`;
+    if (key === 'GET status') return { ok: true, heute: stats(m, 1), woche: stats(m, 7), monat: stats(m, 30), warteschlange: 2, in_arbeit: 1,
+      zur_pruefung: byM(m).filter((j) => j.status === 'review').length, export_fehlgeschlagen: byM(m).filter((j) => j.export && j.export.status === 'failed').length,
+      schutzschalter_offen: false, mandanten: [...new Set(jobs.map((j) => j.mandant))].sort(), zeit: new Date().toISOString() };
+    if (key === 'GET pruefung/offen') return { ok: true, faelle: byM(m).filter((j) => j.status === 'review').sort((a, b) => a.empfangen.localeCompare(b.empfangen))
+      .map((j) => ({ job_id: j.job_id, mandant: j.mandant, filename: j.dateiname, received_at: j.empfangen, review_reason: j.gruende, extraction: j.extraktion, final_data: j.daten })) };
+    if (key === 'GET auftrag') { const j = findJob(q.job_id); const { tokens, ...rest } = j; return { ok: true, auftrag: { ...structuredClone(rest), review_token: j.status === 'review' ? j.review_token : null, verbrauch: { input: tokens[0], output: tokens[1] } } }; }
+    if (key === 'GET dokument') { const j = findJob(q.job_id); return new Response(new Blob([svg(j.daten || j.extraktion)], { type: 'image/svg+xml' })); }
+    if (key === 'GET dokumente') {
+      const s = (q.suche || '').toLowerCase();
+      return { ok: true, dokumente: byM(m).filter((j) => !q.status || j.status === q.status).map(row)
+        .filter((r) => !s || [r.dateiname, r.belegnummer, r.aussteller].some((v) => String(v || '').toLowerCase().includes(s))).sort((a, b) => b.empfangen.localeCompare(a.empfangen)).slice(0, 200) };
+    }
+    if (key === 'POST pruefung/entscheidung') {
+      const j = findJob(body.job_id);
+      if (!body.token || body.token !== j.review_token) err('Auftrag unbekannt oder Token ungültig');
+      if (j.status !== 'review') err(`Auftrag ist im Status ${j.status}, nicht in Prüfung`);
+      const who = session.name || body.pruefer;
+      if (!who) err('Prüfer muss angegeben werden');
+      j.review_token = uid();
+      if (body.entscheidung === 'freigeben') {
+        const gross = Math.abs(Number(((body.daten || j.daten || {}).totals || {}).gross) || 0);
+        if (gross >= settings.review_above_gross) {
+          if (!j.erste_freigabe) { j.erste_freigabe = who; j.daten = structuredClone(body.daten || j.daten); log(j, 'erste_freigabe', who, { betrag: gross }); return { ok: true, entscheidung: 'erste_freigabe' }; }
+          if (j.erste_freigabe.toLowerCase() === who.toLowerCase()) { j.review_token = body.token; err('Die zweite Freigabe muss von einer anderen Person kommen.'); }
+        }
+        j.daten = structuredClone(body.daten || j.daten); j.status = 'done'; j.freigegeben_von = j.erste_freigabe ? `${j.erste_freigabe} + ${who}` : who;
+        j.export = { status: 'sent', versuche: 1, erp: true, datei: true, gesendet: new Date().toISOString() };
+        log(j, 'pruefentscheidung', who, { entscheidung: 'freigeben' }); log(j, 'exportiert', 'system', { erp: true, datei: true });
+      } else if (body.entscheidung === 'ablehnen') { j.status = 'rejected'; log(j, 'pruefentscheidung', who, { entscheidung: 'ablehnen' }); }
+      else if (body.entscheidung === 'erneut_verarbeiten') {
+        j.status = 'processing'; j.gruende = null; log(j, 'pruefentscheidung', who, { entscheidung: 'erneut_verarbeiten' });
+        setTimeout(() => { j.status = 'review'; j.gruende = ['Prüf-Agent: Ergebnis weiterhin unsicher']; log(j, 'zur_pruefung'); refreshStatus(); }, 4000);
+      } else err('Entscheidung muss freigeben, ablehnen oder erneut_verarbeiten sein');
+      return { ok: true, job_id: j.job_id, entscheidung: body.entscheidung };
+    }
+    if (key === 'GET exporte/fehlgeschlagen') return { ok: true, exporte: byM(m).filter((j) => j.export && j.export.status === 'failed')
+      .map((j) => ({ job_id: j.job_id, mandant: j.mandant, dateiname: j.dateiname, versuche: j.export.versuche, fehler: j.export.fehler, datei_geschrieben: j.export.datei, seit: j.empfangen })) };
+    if (key === 'POST export/erneut') {
+      const j = findJob(body.job_id);
+      if (!j.export || j.export.status !== 'failed') err('Kein fehlgeschlagener Export für diesen Auftrag');
+      j.export = { ...j.export, status: 'pending', versuche: 0, fehler: null }; log(j, 'export_erneut_angestossen', session.name);
+      setTimeout(() => { j.export = { status: 'sent', versuche: 1, erp: true, datei: true, gesendet: new Date().toISOString() }; j.status = 'done'; log(j, 'exportiert', 'system', { erp: true }); refreshStatus(); }, 3000);
+      return { ok: true };
+    }
+    if (key === 'GET alarme') return { ok: true, alarme: [...alerts].sort((a, b) => b.id - a.id) };
+    if (key === 'GET einstellungen') return { ok: true, einstellungen: structuredClone(settings) };
+    if (key === 'POST einstellungen') {
+      const k = body.schluessel; const v = body.wert;
+      if (!(k in settings)) err(`Einstellung ${k} darf hier nicht geändert werden`, 400);
+      if (k === 'confidence_auto' && !(typeof v === 'number' && v >= 0.5 && v <= 1)) err('Sicherheitsschwelle muss zwischen 0,5 und 1 liegen', 400);
+      if (['verify_above_gross', 'review_above_gross', 'stale_queue_minutes', 'max_attempts'].includes(k) && !(typeof v === 'number' && v > 0)) err('Wert muss eine positive Zahl sein', 400);
+      if (k === 'export_mode' && !['http', 'file', 'both'].includes(v)) err('Exportweg muss http, file oder both sein', 400);
+      alerts.push({ id: alerts.length + 1, zeit: new Date().toISOString(), stufe: 'info', meldung: `Einstellung ${k} geändert von ${session.name}: ${JSON.stringify(settings[k])} → ${JSON.stringify(v)}`, zugestellt: ['webhook'], unterdrueckt: false });
+      settings[k] = v; return { ok: true };
+    }
+    if (key === 'POST dokument-eingang') {
+      const okType = /pdf|image\/(jpeg|png|gif|webp)|text|xml|json/.test(file.type || '') || /\.(pdf|jpe?g|png|gif|webp|txt|csv|xml|json|html?|eml)$/i.test(file.name);
+      if (!okType) err(`Dateityp ${file.type || 'unbekannt'} wird nicht unterstützt.`, 415);
+      const dup = jobs.find((j) => j.dateiname === file.name && j.quelle === 'webhook');
+      if (dup) return { ok: true, job_id: dup.job_id, duplikat: true, status: dup.status };
+      const ls = lines(['Material laut Lieferschein', 10, 'Stk', 25]);
+      const d = doc({ issuer: party('Baustoffhandel Traun GmbH', 'ATU13585627', 'AT61 1904 3002 3457 3201', 'Bahnhofstraße 12, 4050 Traun'), document_number: file.name.replace(/\.[^.]+$/, ''), document_date: new Date().toISOString().slice(0, 10), line_items: ls, totals: tot(ls) });
+      const j = add({ status: 'queued', mandant: body.mandant || 'hochbau-mitte', dateiname: file.name, quelle: 'webhook', empfangen: new Date().toISOString(), extraktion: null, daten: null });
+      setTimeout(() => { j.status = 'processing'; log(j, 'verarbeitung_gestartet'); }, 1500);
+      setTimeout(() => { j.extraktion = d; j.daten = d; j.pruefung = { ok: true, data: { verdict: 'bestaetigt', corrected: d, findings: [] } }; j.status = 'done';
+        j.export = { status: 'sent', versuche: 1, erp: true, datei: true, gesendet: new Date().toISOString() }; log(j, 'automatisch_freigegeben'); log(j, 'exportiert'); refreshStatus(); }, 5000);
+      return { ok: true, job_id: j.job_id, duplikat: false, status: 'queued' };
+    }
+    err(`Unbekannte Schnittstelle ${key}`, 404);
+  }
+  return { handle };
+})();
+
+// ===========================================================================
+// Start
+// ===========================================================================
+(function init() {
+  const theme = prefs.get('theme'); if (theme) document.documentElement.dataset.theme = theme;
+  let saved = null;
+  try { saved = JSON.parse(store.get('session') || 'null'); } catch (e) { saved = null; }
+  if (saved && (saved.demo || (saved.keys && saved.keys.review))) { Object.assign(session, saved); startApp(); return; }
+  // Als Datei geöffnet (ohne Server): direkt Demo anbieten
+  if (location.protocol === 'file:' || location.protocol === 'blob:' || !/\/webhook(-test)?\//.test(location.pathname)) $('#l-review').required = false;
+  showLogin();
+})();
+</script>
+</body>
+</html>
