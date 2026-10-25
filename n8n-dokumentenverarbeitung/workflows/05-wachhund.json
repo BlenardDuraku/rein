@@ -1,0 +1,368 @@
+{
+  "id": "DfWachhund000001",
+  "name": "DF 05 Wachhund",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "DfWachhund000001-1",
+      "name": "Alle 5 Minuten",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.watchdog() as w",
+        "options": {}
+      },
+      "id": "DfWachhund000001-2",
+      "name": "Zustand prüfen",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "\nconst w = $input.first().json.w;\nconst a = [];\nif (w.aeltester_wartend_min > w.grenze_wartezeit_min)\n  a.push(['kritisch', 'queue_stale', `Warteschlange staut sich: ältestes Dokument wartet seit ${w.aeltester_wartend_min} Minuten (${w.warteschlange} wartend).`]);\nif (w.haengende_zurueckgeholt > 0)\n  a.push(['warnung', 'stuck_jobs', `${w.haengende_zurueckgeholt} hängende Verarbeitung(en) wurden automatisch neu eingeplant.`]);\nif (w.export_fehlgeschlagen > 0)\n  a.push(['kritisch', 'exports_failed', `${w.export_fehlgeschlagen} Export(e) endgültig fehlgeschlagen. Daten liegen in docflow.exports bereit.`]);\nif (w.schutzschalter_offen)\n  a.push(['kritisch', 'circuit_open_watch', 'Schutzschalter offen: KI-Dienst gestört, Verarbeitung pausiert automatisch.']);\nif (w.ki_fehlerquote_15min >= 0.3 && !w.schutzschalter_offen)\n  a.push(['warnung', 'llm_errors', `Erhöhte KI-Fehlerquote: ${Math.round(w.ki_fehlerquote_15min * 100)} % in 15 Minuten.`]);\nif (w.neu_zur_pruefung_5min > 0)\n  a.push(['info', 'review_new', `${w.neu_zur_pruefung_5min} neue(s) Dokument(e) zur Prüfung, insgesamt ${w.zur_pruefung} offen.`]);\nreturn a.map(([severity, key, message]) => ({ json: { severity, key, message, details: w } }));"
+      },
+      "id": "DfWachhund000001-3",
+      "name": "Auffälligkeiten bewerten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.raise_alert($1, $2, $3, $4::jsonb) as r",
+        "options": {
+          "queryReplacement": "={{ [$json.severity, $json.key, $json.message, JSON.stringify($json.details)] }}"
+        }
+      },
+      "id": "DfWachhund000001-4",
+      "name": "Alarm anlegen",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Totmann-Schalter konfiguriert?-c1",
+              "leftValue": "={{ !!$('Zustand prüfen').first().json.w.heartbeat_url }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfWachhund000001-5",
+      "name": "Totmann-Schalter konfiguriert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Zustand prüfen').first().json.w.heartbeat_url }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "DfWachhund000001-6",
+      "name": "Lebenszeichen senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        220
+      ],
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "55 6 * * *"
+            }
+          ]
+        }
+      },
+      "id": "DfWachhund000001-7",
+      "name": "Täglich 6:55",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select m.mandant, docflow.stats(case when m.mandant = 'alle' then null else m.mandant end, 1) as s,\n  docflow.setting_text('alert_email_to') as an, docflow.setting_text('alert_email_from') as von\nfrom (select distinct mandant from docflow.jobs union all select 'alle') m",
+        "options": {}
+      },
+      "id": "DfWachhund000001-8",
+      "name": "Kennzahlen laden",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        480
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "\nconst rows = $input.all().map((i) => i.json);\nconst an = rows[0] ? rows[0].an : '';\nconst von = rows[0] ? rows[0].von : '';\nconst cells = (s) => [s.empfangen, s.automatisch, s.manuell_freigegeben, s.zur_pruefung, s.abgelehnt, (s.automatisierungsquote ?? '–') + ' %', s.ki_ausfaelle];\nconst head = ['Mandant', 'Empfangen', 'Automatisch', 'Manuell freigegeben', 'Offen zur Prüfung', 'Abgelehnt', 'Automatisierung', 'KI-Ausfälle'];\nconst html = '<h2>Dokumentenverarbeitung: Tagesbericht</h2><table border=\"1\" cellpadding=\"6\" style=\"border-collapse:collapse\">'\n  + '<tr>' + head.map((h) => '<th>' + h + '</th>').join('') + '</tr>'\n  + rows.map((r) => '<tr><td>' + r.mandant + '</td>' + cells(r.s).map((c) => '<td>' + c + '</td>').join('') + '</tr>').join('')\n  + '</table><p>Zeitraum: letzte 24 Stunden.</p>';\nreturn [{ json: { an, von, html, send: !!an } }];"
+      },
+      "id": "DfWachhund000001-9",
+      "name": "Bericht formatieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Empfänger hinterlegt?-c1",
+              "leftValue": "={{ $json.send }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfWachhund000001-10",
+      "name": "Empfänger hinterlegt?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.von }}",
+        "toEmail": "={{ $json.an }}",
+        "subject": "Dokumentenverarbeitung: Tagesbericht",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "DfWachhund000001-11",
+      "name": "Bericht senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        960,
+        480
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "DF_SMTP",
+          "name": "DF SMTP"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Alle 5 Minuten": {
+      "main": [
+        [
+          {
+            "node": "Zustand prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zustand prüfen": {
+      "main": [
+        [
+          {
+            "node": "Auffälligkeiten bewerten",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Totmann-Schalter konfiguriert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auffälligkeiten bewerten": {
+      "main": [
+        [
+          {
+            "node": "Alarm anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Totmann-Schalter konfiguriert?": {
+      "main": [
+        [
+          {
+            "node": "Lebenszeichen senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Täglich 6:55": {
+      "main": [
+        [
+          {
+            "node": "Kennzahlen laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kennzahlen laden": {
+      "main": [
+        [
+          {
+            "node": "Bericht formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bericht formatieren": {
+      "main": [
+        [
+          {
+            "node": "Empfänger hinterlegt?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Empfänger hinterlegt?": {
+      "main": [
+        [
+          {
+            "node": "Bericht senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "DfFehlerbehand01"
+  },
+  "pinData": {},
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

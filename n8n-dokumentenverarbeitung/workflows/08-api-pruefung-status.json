@@ -1,0 +1,679 @@
+{
+  "id": "DfApiPruefung001",
+  "name": "DF 08 API Prüfung und Status",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "pruefung/entscheidung",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "DfApiPruefung001-1",
+      "name": "POST pruefung/entscheidung",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DF_REVIEW_KEY",
+          "name": "DF Prüfer-API"
+        }
+      },
+      "webhookId": "df-pruefung-entscheidung"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.review_decide($1::uuid, $2::uuid, $3, $4::jsonb, $5) as r",
+        "options": {
+          "queryReplacement": "={{ [$json.body.job_id, $json.body.token || null, $json.body.entscheidung, $json.body.daten ? JSON.stringify($json.body.daten) : null, $json.headers['x-pruefer'] || $json.body.pruefer || null] }}"
+        }
+      },
+      "id": "DfApiPruefung001-2",
+      "name": "Entscheidung speichern",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nif ($json.error || !$json.r) return { json: { http_status: 400, body: { ok: false, fehler: $json.error || 'Ungültige Anfrage' } } };\nreturn { json: { http_status: $json.r.ok ? 200 : 409, body: $json.r } };"
+      },
+      "id": "DfApiPruefung001-3",
+      "name": "Antwort Entscheidung",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}"
+        }
+      },
+      "id": "DfApiPruefung001-4",
+      "name": "Antworten Entscheidung",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "pruefung/offen",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "DfApiPruefung001-5",
+      "name": "GET pruefung/offen",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DF_REVIEW_KEY",
+          "name": "DF Prüfer-API"
+        }
+      },
+      "webhookId": "df-pruefung-offen"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select coalesce(jsonb_agg(to_jsonb(r)), '[]'::jsonb) as liste from docflow.review_list($1) r",
+        "options": {
+          "queryReplacement": "={{ [$json.query.mandant || null] }}"
+        }
+      },
+      "id": "DfApiPruefung001-6",
+      "name": "Prüfliste laden",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        200
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { http_status: 200, body: { ok: true, faelle: $json.liste } } };"
+      },
+      "id": "DfApiPruefung001-7",
+      "name": "Antwort Prüfliste",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}"
+        }
+      },
+      "id": "DfApiPruefung001-8",
+      "name": "Antworten Prüfliste",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "status",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "DfApiPruefung001-9",
+      "name": "GET status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        400
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DF_API_KEY",
+          "name": "DF API-Schlüssel"
+        }
+      },
+      "webhookId": "df-status"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.stats($1, 1) as heute, docflow.stats($1, 7) as woche, docflow.stats($1, 30) as monat,\n  (select count(*) from docflow.jobs where status in ('queued','retry') and ($1 is null or mandant = $1)) as warteschlange,\n  (select count(*) from docflow.jobs where status = 'review' and ($1 is null or mandant = $1)) as zur_pruefung,\n  docflow.circuit_open() as schutzschalter_offen",
+        "options": {
+          "queryReplacement": "={{ [$json.query.mandant || null] }}"
+        }
+      },
+      "id": "DfApiPruefung001-10",
+      "name": "Kennzahlen",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { http_status: 200, body: { ok: true, ...$json } } };"
+      },
+      "id": "DfApiPruefung001-11",
+      "name": "Antwort Status",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}"
+        }
+      },
+      "id": "DfApiPruefung001-12",
+      "name": "Antworten Status",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "dokument",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "DfApiPruefung001-13",
+      "name": "GET dokument",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        600
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DF_REVIEW_KEY",
+          "name": "DF Prüfer-API"
+        }
+      },
+      "webhookId": "df-dokument"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select d.filename, d.mime_type, translate(encode(d.content, 'base64'), E'\\n', '') as b64\nfrom docflow.jobs j join docflow.documents d on d.id = j.document_id\nwhere j.id = $1::uuid and j.review_token = $2::uuid",
+        "options": {
+          "queryReplacement": "={{ [$json.query.job_id, $json.query.token] }}"
+        }
+      },
+      "id": "DfApiPruefung001-14",
+      "name": "Dokument laden",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        600
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Gefunden?-c1",
+              "leftValue": "={{ !!$json.b64 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfApiPruefung001-15",
+      "name": "Gefunden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nreturn { json: {}, binary: { data: { data: $json.b64, mimeType: $json.mime_type, fileName: $json.filename } } };"
+      },
+      "id": "DfApiPruefung001-16",
+      "name": "Als Datei",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "options": {}
+      },
+      "id": "DfApiPruefung001-17",
+      "name": "Datei ausliefern",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: { http_status: 404, body: { ok: false, fehler: 'Dokument nicht gefunden oder Token ungültig' } } };"
+      },
+      "id": "DfApiPruefung001-18",
+      "name": "Nicht gefunden",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}"
+        }
+      },
+      "id": "DfApiPruefung001-19",
+      "name": "Antworten nicht gefunden",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "export/erneut",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "DfApiPruefung001-20",
+      "name": "POST export/erneut",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        820
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "DF_REVIEW_KEY",
+          "name": "DF Prüfer-API"
+        }
+      },
+      "webhookId": "df-export-erneut"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.requeue_export($1::uuid, $2) as r",
+        "options": {
+          "queryReplacement": "={{ [$json.body.job_id, $json.headers['x-pruefer'] || $json.body.pruefer || 'api'] }}"
+        }
+      },
+      "id": "DfApiPruefung001-21",
+      "name": "Export erneut anstoßen",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        820
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nif ($json.error || !$json.r) return { json: { http_status: 400, body: { ok: false, fehler: $json.error || 'Ungültige Anfrage' } } };\nreturn { json: { http_status: $json.r.ok ? 200 : 409, body: $json.r } };"
+      },
+      "id": "DfApiPruefung001-22",
+      "name": "Antwort Export",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        820
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "responseCode": "={{ $json.http_status }}"
+        }
+      },
+      "id": "DfApiPruefung001-23",
+      "name": "Antworten Export",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        820
+      ]
+    }
+  ],
+  "connections": {
+    "POST pruefung/entscheidung": {
+      "main": [
+        [
+          {
+            "node": "Entscheidung speichern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entscheidung speichern": {
+      "main": [
+        [
+          {
+            "node": "Antwort Entscheidung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwort Entscheidung": {
+      "main": [
+        [
+          {
+            "node": "Antworten Entscheidung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET pruefung/offen": {
+      "main": [
+        [
+          {
+            "node": "Prüfliste laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prüfliste laden": {
+      "main": [
+        [
+          {
+            "node": "Antwort Prüfliste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwort Prüfliste": {
+      "main": [
+        [
+          {
+            "node": "Antworten Prüfliste",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET status": {
+      "main": [
+        [
+          {
+            "node": "Kennzahlen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kennzahlen": {
+      "main": [
+        [
+          {
+            "node": "Antwort Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwort Status": {
+      "main": [
+        [
+          {
+            "node": "Antworten Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET dokument": {
+      "main": [
+        [
+          {
+            "node": "Dokument laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dokument laden": {
+      "main": [
+        [
+          {
+            "node": "Gefunden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gefunden?": {
+      "main": [
+        [
+          {
+            "node": "Als Datei",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nicht gefunden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Als Datei": {
+      "main": [
+        [
+          {
+            "node": "Datei ausliefern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nicht gefunden": {
+      "main": [
+        [
+          {
+            "node": "Antworten nicht gefunden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST export/erneut": {
+      "main": [
+        [
+          {
+            "node": "Export erneut anstoßen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export erneut anstoßen": {
+      "main": [
+        [
+          {
+            "node": "Antwort Export",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwort Export": {
+      "main": [
+        [
+          {
+            "node": "Antworten Export",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "DfFehlerbehand01"
+  },
+  "pinData": {},
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

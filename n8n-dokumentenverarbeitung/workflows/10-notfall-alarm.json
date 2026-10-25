@@ -1,0 +1,321 @@
+{
+  "id": "DfNotfallAlarm01",
+  "name": "DF 10 Notfall-Alarm",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "id": "DfNotfallAlarm01-1",
+      "name": "Aufruf",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "\n// Entprellen: Fällt die Datenbank aus, scheitern alle Workflows gleichzeitig. Gleiche Meldungen höchstens alle 15 Minuten.\nconst sd = $getWorkflowStaticData('global');\nsd.sent = sd.sent || {};\nconst now = Date.now();\nfor (const k of Object.keys(sd.sent)) if (now - sd.sent[k] > 15 * 60000) delete sd.sent[k];\nconst out = [];\nfor (const it of $input.all()) {\n  const m = it.json.message || 'Unbekannter Notfall';\n  const key = m.replace(/[0-9a-f-]{36}|\\d+/g, '#').slice(0, 120);\n  if (sd.sent[key]) continue;\n  sd.sent[key] = now;\n  out.push({ json: { ...it.json, text: `🔴 [NOTFALL] Dokumentenverarbeitung: ${m}`, webhook: $env.DOCFLOW_ALERT_WEBHOOK || '',\n    email_to: $env.DOCFLOW_ALERT_EMAIL || '', email_from: $env.DOCFLOW_ALERT_EMAIL_FROM || 'docflow@localhost' } });\n}\nreturn out;"
+      },
+      "id": "DfNotfallAlarm01-2",
+      "name": "Nachricht bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Webhook hinterlegt?-c1",
+              "leftValue": "={{ !!$json.webhook }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfNotfallAlarm01-3",
+      "name": "Webhook hinterlegt?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.webhook }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.text }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "DfNotfallAlarm01-4",
+      "name": "An Teams/Slack senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: $('Nachricht bauen').item.json };"
+      },
+      "id": "DfNotfallAlarm01-5",
+      "name": "Kontext zurückholen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "E-Mail hinterlegt?-c1",
+              "leftValue": "={{ !!$json.email_to }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfNotfallAlarm01-6",
+      "name": "E-Mail hinterlegt?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.email_from }}",
+        "toEmail": "={{ $json.email_to }}",
+        "subject": "={{ $json.text.slice(0, 150) }}",
+        "emailFormat": "text",
+        "text": "={{ $json.text + \"\\n\\n\" + JSON.stringify($json.details || {}, null, 2) }}",
+        "options": {}
+      },
+      "id": "DfNotfallAlarm01-7",
+      "name": "Per E-Mail senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        0
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "DF_SMTP",
+          "name": "DF SMTP"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nconst a = $('Nachricht bauen').item.json;\nconst data = Buffer.from(JSON.stringify(a, null, 2), 'utf8').toString('base64');\nreturn { json: a, binary: { data: { data, mimeType: 'application/json', fileName: 'notfall.json' } } };"
+      },
+      "id": "DfNotfallAlarm01-8",
+      "name": "Als Datei ablegen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/data/alerts/notfall-{{ new Date().toISOString().replace(/[:.]/g, '-') }}.json",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "DfNotfallAlarm01-9",
+      "name": "Notfalldatei schreiben",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Aufruf": {
+      "main": [
+        [
+          {
+            "node": "Nachricht bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nachricht bauen": {
+      "main": [
+        [
+          {
+            "node": "Webhook hinterlegt?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook hinterlegt?": {
+      "main": [
+        [
+          {
+            "node": "An Teams/Slack senden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Kontext zurückholen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "An Teams/Slack senden": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Kontext zurückholen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kontext zurückholen": {
+      "main": [
+        [
+          {
+            "node": "E-Mail hinterlegt?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-Mail hinterlegt?": {
+      "main": [
+        [
+          {
+            "node": "Per E-Mail senden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Als Datei ablegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Per E-Mail senden": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Als Datei ablegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Als Datei ablegen": {
+      "main": [
+        [
+          {
+            "node": "Notfalldatei schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
