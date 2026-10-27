@@ -1,0 +1,153 @@
+{
+  "id": "DfFehlerbehand01",
+  "name": "DF 09 Fehlerbehandlung",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "DfFehlerbehand01-1",
+      "name": "Bei Fehler",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nconst e = $json;\nconst exec = e.execution || {};\nconst err = exec.error || e.trigger?.error || {};\nreturn { json: {\n  workflow: (e.workflow && e.workflow.name) || '?', node: exec.lastNodeExecuted || err.node?.name || '?',\n  execution_id: String(exec.id || ''), message: err.message || 'Unbekannter Fehler',\n  details: { url: exec.url || null, stack: String(err.stack || '').slice(0, 2000), modus: exec.mode || null } } };"
+      },
+      "id": "DfFehlerbehand01-2",
+      "name": "Fehler aufbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.log_workflow_error($1, $2, $3, $4, $5::jsonb) as r",
+        "options": {
+          "queryReplacement": "={{ [$json.workflow, $json.node, $json.execution_id, $json.message, JSON.stringify($json.details)] }}"
+        }
+      },
+      "id": "DfFehlerbehand01-3",
+      "name": "Fehler protokollieren",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nconst f = $('Fehler aufbereiten').item.json;\nreturn { json: { severity: 'kritisch', message: `Workflow \"${f.workflow}\" abgebrochen (${f.node}): ${f.message}. Zusätzlich ist die Datenbank nicht erreichbar.`, details: f } };"
+      },
+      "id": "DfFehlerbehand01-4",
+      "name": "Datenbank nicht erreichbar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "DfNotfallAlarm01",
+          "mode": "id"
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "DfFehlerbehand01-5",
+      "name": "Notfall-Alarm",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Bei Fehler": {
+      "main": [
+        [
+          {
+            "node": "Fehler aufbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fehler aufbereiten": {
+      "main": [
+        [
+          {
+            "node": "Fehler protokollieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fehler protokollieren": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Datenbank nicht erreichbar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datenbank nicht erreichbar": {
+      "main": [
+        [
+          {
+            "node": "Notfall-Alarm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "pinData": {},
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

@@ -1,0 +1,526 @@
+{
+  "id": "DfAlarmVersand01",
+  "name": "DF 06 Alarm-Versand",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "DfAlarmVersand01-1",
+      "name": "Jede Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select a.*, docflow.setting_text('alert_webhook_url') as webhook,\n  docflow.setting_text('alert_email_to') as email_to, docflow.setting_text('alert_email_from') as email_from\nfrom docflow.pending_alerts(50) a",
+        "options": {}
+      },
+      "id": "DfAlarmVersand01-2",
+      "name": "Alarme laden",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nconst icon = { kritisch: '🔴', warnung: '🟠', info: '🔵' }[$json.severity] || '';\nconst text = `${icon} [${$json.severity.toUpperCase()}] Dokumentenverarbeitung: ${$json.message}`;\nreturn { json: { ...$json, text, has_webhook: !!($json.webhook || '').trim(), has_email: !!($json.email_to || '').trim() } };"
+      },
+      "id": "DfAlarmVersand01-3",
+      "name": "Nachricht bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Webhook hinterlegt?-c1",
+              "leftValue": "={{ $json.has_webhook }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfAlarmVersand01-4",
+      "name": "Webhook hinterlegt?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.webhook }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.text }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "DfAlarmVersand01-5",
+      "name": "An Teams/Slack senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        0
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.mark_alert_delivered($1, 'webhook')",
+        "options": {
+          "queryReplacement": "={{ [$('Nachricht bauen').item.json.alert_id] }}"
+        }
+      },
+      "id": "DfAlarmVersand01-6",
+      "name": "Zugestellt: Webhook",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1200,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "return { json: $('Nachricht bauen').item.json };"
+      },
+      "id": "DfAlarmVersand01-7",
+      "name": "Kontext zurückholen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "E-Mail hinterlegt?-c1",
+              "leftValue": "={{ $json.has_email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfAlarmVersand01-8",
+      "name": "E-Mail hinterlegt?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.email_from }}",
+        "toEmail": "={{ $json.email_to }}",
+        "subject": "={{ $json.text.slice(0, 150) }}",
+        "emailFormat": "text",
+        "text": "={{ $json.text + \"\\n\\nDetails:\\n\" + JSON.stringify($json.details, null, 2) }}",
+        "options": {}
+      },
+      "id": "DfAlarmVersand01-9",
+      "name": "Per E-Mail senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        0
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "DF_SMTP",
+          "name": "DF SMTP"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.mark_alert_delivered($1, 'email')",
+        "options": {
+          "queryReplacement": "={{ [$('Nachricht bauen').item.json.alert_id] }}"
+        }
+      },
+      "id": "DfAlarmVersand01-10",
+      "name": "Zugestellt: E-Mail",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2160,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nconst a = $('Nachricht bauen').item.json;\nconst data = Buffer.from(JSON.stringify(a, null, 2), 'utf8').toString('base64');\nreturn { json: a, binary: { data: { data, mimeType: 'application/json', fileName: `alarm-${a.alert_id}.json` } } };"
+      },
+      "id": "DfAlarmVersand01-11",
+      "name": "Als Datei ablegen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/data/alerts/alarm-{{ new Date().toISOString().slice(0,10) }}-{{ $json.alert_id }}.json",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "DfAlarmVersand01-12",
+      "name": "Alarmdatei schreiben",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2640,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Datei geschrieben?-c1",
+              "leftValue": "={{ !$json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfAlarmVersand01-13",
+      "name": "Datei geschrieben?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.mark_alert_delivered($1, 'datei')",
+        "options": {
+          "queryReplacement": "={{ [$('Nachricht bauen').item.json.alert_id] }}"
+        }
+      },
+      "id": "DfAlarmVersand01-14",
+      "name": "Zugestellt: Datei",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3120,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "source": "database",
+        "workflowId": {
+          "__rl": true,
+          "value": "DfNotfallAlarm01",
+          "mode": "id"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "id": "DfAlarmVersand01-15",
+      "name": "Notfall-Alarm",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        3360,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Jede Minute": {
+      "main": [
+        [
+          {
+            "node": "Alarme laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alarme laden": {
+      "main": [
+        [
+          {
+            "node": "Nachricht bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nachricht bauen": {
+      "main": [
+        [
+          {
+            "node": "Webhook hinterlegt?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook hinterlegt?": {
+      "main": [
+        [
+          {
+            "node": "An Teams/Slack senden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Kontext zurückholen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "An Teams/Slack senden": {
+      "main": [
+        [
+          {
+            "node": "Zugestellt: Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Kontext zurückholen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kontext zurückholen": {
+      "main": [
+        [
+          {
+            "node": "E-Mail hinterlegt?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-Mail hinterlegt?": {
+      "main": [
+        [
+          {
+            "node": "Per E-Mail senden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Als Datei ablegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Per E-Mail senden": {
+      "main": [
+        [
+          {
+            "node": "Zugestellt: E-Mail",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Als Datei ablegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Als Datei ablegen": {
+      "main": [
+        [
+          {
+            "node": "Alarmdatei schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alarmdatei schreiben": {
+      "main": [
+        [
+          {
+            "node": "Datei geschrieben?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datei geschrieben?": {
+      "main": [
+        [
+          {
+            "node": "Zugestellt: Datei",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notfall-Alarm",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "DfFehlerbehand01"
+  },
+  "pinData": {},
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

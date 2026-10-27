@@ -1,0 +1,117 @@
+# Produktionsnahe Umgebung: n8n im Queue-Modus (mehrere Worker), PostgreSQL, Redis.
+# Start:   cp .env.example .env  (Werte eintragen)  &&  docker compose up -d
+# Skalieren: docker compose up -d --scale n8n-worker=4
+#
+# Für Hochverfügbarkeit in Konzerngröße: PostgreSQL als verwalteten Cluster
+# (z. B. Azure Database for PostgreSQL mit Zonenredundanz) und Redis mit Replikat betreiben.
+
+x-n8n-env: &n8n-env
+  DB_TYPE: postgresdb
+  DB_POSTGRESDB_HOST: postgres
+  DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+  DB_POSTGRESDB_USER: ${POSTGRES_USER}
+  DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+  EXECUTIONS_MODE: queue
+  QUEUE_BULL_REDIS_HOST: redis
+  QUEUE_HEALTH_CHECK_ACTIVE: "true"
+  N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+  N8N_HOST: ${N8N_HOST}
+  N8N_PROTOCOL: https
+  WEBHOOK_URL: https://${N8N_HOST}/
+  GENERIC_TIMEZONE: Europe/Vienna
+  TZ: Europe/Vienna
+  N8N_DIAGNOSTICS_ENABLED: "false"
+  N8N_RESTRICT_FILE_ACCESS_TO: /data
+  N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"       # nur DOCFLOW_* werden in den Workflows gelesen
+  N8N_DEFAULT_BINARY_DATA_MODE: database      # Binärdaten gemeinsam für alle Worker
+  N8N_RUNNERS_TASK_TIMEOUT: "300"
+  EXECUTIONS_DATA_PRUNE: "true"
+  EXECUTIONS_DATA_MAX_AGE: "336"              # Ausführungsdaten 14 Tage (das Audit-Protokoll liegt dauerhaft in docflow.job_events)
+  OFFLOAD_MANUAL_EXECUTIONS_TO_WORKERS: "true"
+  DOCFLOW_ALERT_WEBHOOK: ${DOCFLOW_ALERT_WEBHOOK}
+  DOCFLOW_ALERT_EMAIL: ${DOCFLOW_ALERT_EMAIL}
+  DOCFLOW_ALERT_EMAIL_FROM: ${DOCFLOW_ALERT_EMAIL_FROM}
+
+services:
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/001_schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      retries: 10
+
+  redis:
+    image: redis:7
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+
+  # Legt die drei Datenordner an (n8n erzeugt beim Schreiben keine Unterordner)
+  init-data:
+    image: busybox:1.36
+    command: ["sh", "-c", "mkdir -p /data/spool /data/export /data/alerts && chown -R 1000:1000 /data"]
+    volumes:
+      - docflowdata:/data
+
+  n8n:
+    image: n8nio/n8n:${N8N_VERSION}
+    restart: always
+    environment: *n8n-env
+    expose:
+      - "5678"
+    volumes:
+      - n8nhome:/home/node/.n8n
+      - docflowdata:/data
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      init-data: { condition: service_completed_successfully }
+
+  n8n-worker:
+    image: n8nio/n8n:${N8N_VERSION}
+    restart: always
+    command: worker --concurrency=10
+    environment: *n8n-env
+    volumes:
+      - docflowdata:/data
+    depends_on: [n8n]
+
+  n8n-webhook:
+    image: n8nio/n8n:${N8N_VERSION}
+    restart: always
+    command: webhook
+    environment: *n8n-env
+    volumes:
+      - docflowdata:/data
+    depends_on: [n8n]
+
+  # Webserver: TLS, Dashboard unter https://<host>/belegzentrale/, n8n dahinter
+  proxy:
+    image: nginx:1.27
+    restart: always
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./deploy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./dashboard:/usr/share/nginx/belegzentrale:ro
+      - ./deploy/certs:/etc/nginx/certs:ro
+    depends_on: [n8n]
+
+volumes:
+  pgdata:
+  redisdata:
+  n8nhome:
+  docflowdata:

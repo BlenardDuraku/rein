@@ -1,0 +1,552 @@
+{
+  "id": "DfExportErp00001",
+  "name": "DF 04 Export ERP",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "id": "DfExportErp00001-1",
+      "name": "Jede Minute",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select jsonb_object_agg(key, value) as s from docflow.settings",
+        "options": {}
+      },
+      "id": "DfExportErp00001-2",
+      "name": "Einstellungen laden",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "\nreturn Array.from({ length: 20 }, (_, i) => ({ json: { platz: i + 1 } }));"
+      },
+      "id": "DfExportErp00001-3",
+      "name": "Plätze anlegen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "DfExportErp00001-4",
+      "name": "Für jeden Platz",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select * from docflow.claim_exports($1, 1)",
+        "options": {
+          "queryReplacement": "={{ [$execution.id] }}"
+        }
+      },
+      "id": "DfExportErp00001-5",
+      "name": "Export holen",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        960,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nconst S = $('Einstellungen laden').first().json.s;\nconst e = $json;\nconst erp = (S.erp_url || '').trim();\nconst mode = S.export_mode || 'both';\nconst httpNeeded = erp !== '' && (mode === 'http' || mode === 'both');\nreturn { json: { ...e, erp_url: erp, mode, export_dir: S.export_dir || '/data/export',\n  do_http: httpNeeded && !e.http_done, http_ok: null, http_error: null } };"
+      },
+      "id": "DfExportErp00001-6",
+      "name": "Export vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "An ERP senden?-c1",
+              "leftValue": "={{ $json.do_http }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfExportErp00001-7",
+      "name": "An ERP senden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.erp_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $json.job_id }}"
+            },
+            {
+              "name": "X-Mandant",
+              "value": "={{ $json.mandant }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.payload) }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "DfExportErp00001-8",
+      "name": "An ERP senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        0
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nconst ctx = { ...$('Export vorbereiten').first().json };\nconst code = $json.statusCode;\nctx.http_ok = code >= 200 && code < 300;\nctx.http_error = ctx.http_ok ? null : (code ? `ERP antwortet HTTP ${code}: ${String($json.body || '').slice(0, 300)}` : 'ERP nicht erreichbar: ' + JSON.stringify($json.error || $json).slice(0, 300));\nreturn { json: ctx };"
+      },
+      "id": "DfExportErp00001-9",
+      "name": "ERP-Antwort auswerten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nconst ctx = { ...$json };\nconst fileMode = ctx.mode === 'file' || ctx.mode === 'both' || !ctx.erp_url;\n// Ersatzweg: Ist das ERP ab dem 3. Versuch nicht erreichbar, wird zusätzlich eine Datei abgelegt\nconst fallback = ctx.do_http && !ctx.http_ok && ctx.attempts >= 3;\nctx.do_file = !ctx.file_done && (fileMode || fallback);\nctx.file_fallback = fallback && !fileMode;\nreturn { json: ctx };"
+      },
+      "id": "DfExportErp00001-10",
+      "name": "Datei-Export nötig?",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "Datei schreiben?-c1",
+              "leftValue": "={{ $json.do_file }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "DfExportErp00001-11",
+      "name": "Datei schreiben?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nconst ctx = $json;\nconst name = `${ctx.job_id}.json`;\nconst data = Buffer.from(JSON.stringify(ctx.payload, null, 2), 'utf8').toString('base64');\n// Fester Dateiname: Eine Wiederholung überschreibt die Datei, statt eine zweite anzulegen\nreturn { json: { ...ctx, file_path: `${ctx.export_dir}/${ctx.mandant}__${name}` },\n         binary: { data: { data, mimeType: 'application/json', fileName: name } } };"
+      },
+      "id": "DfExportErp00001-12",
+      "name": "Datei-Export vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.file_path }}",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "DfExportErp00001-13",
+      "name": "Datei schreiben",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2880,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "language": "javaScript",
+        "jsCode": "\nlet ctx = $json;\nlet fileOk = null;\nif (ctx.export_id === undefined) {\n  // Schreibfehler: Kontext aus dem vorherigen Schritt holen\n  ctx = { ...$('Datei-Export vorbereiten').first().json };\n  fileOk = false;\n  ctx.file_error = $json.error;\n} else if (ctx.file_path) {\n  fileOk = true;\n}\nconst errors = [ctx.http_error, ctx.file_error].filter(Boolean).join(' | ');\nreturn { json: { export_id: ctx.export_id, http_ok: ctx.do_http ? ctx.http_ok : null, file_ok: fileOk, error: errors || null } };"
+      },
+      "id": "DfExportErp00001-14",
+      "name": "Ergebnis zusammenfassen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select docflow.export_result($1::uuid, $2, $3::boolean, $4::boolean, $5) as r",
+        "options": {
+          "queryReplacement": "={{ [$json.export_id, $execution.id, $json.http_ok, $json.file_ok, $json.error] }}"
+        }
+      },
+      "id": "DfExportErp00001-15",
+      "name": "Ergebnis verbuchen",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        3360,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "DF_POSTGRES",
+          "name": "DF Postgres"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "DfExportErp00001-16",
+      "name": "Nächster Export",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        3600,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Jede Minute": {
+      "main": [
+        [
+          {
+            "node": "Einstellungen laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Einstellungen laden": {
+      "main": [
+        [
+          {
+            "node": "Plätze anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Plätze anlegen": {
+      "main": [
+        [
+          {
+            "node": "Für jeden Platz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Für jeden Platz": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Export holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export holen": {
+      "main": [
+        [
+          {
+            "node": "Export vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "An ERP senden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "An ERP senden?": {
+      "main": [
+        [
+          {
+            "node": "An ERP senden",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Datei-Export nötig?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "An ERP senden": {
+      "main": [
+        [
+          {
+            "node": "ERP-Antwort auswerten",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ERP-Antwort auswerten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ERP-Antwort auswerten": {
+      "main": [
+        [
+          {
+            "node": "Datei-Export nötig?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datei-Export nötig?": {
+      "main": [
+        [
+          {
+            "node": "Datei schreiben?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datei schreiben?": {
+      "main": [
+        [
+          {
+            "node": "Datei-Export vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ergebnis zusammenfassen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datei-Export vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "Datei schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Datei schreiben": {
+      "main": [
+        [
+          {
+            "node": "Ergebnis zusammenfassen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ergebnis zusammenfassen": {
+      "main": [
+        [
+          {
+            "node": "Ergebnis verbuchen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ergebnis verbuchen": {
+      "main": [
+        [
+          {
+            "node": "Nächster Export",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nächster Export": {
+      "main": [
+        [
+          {
+            "node": "Für jeden Platz",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "none",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": false,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "DfFehlerbehand01"
+  },
+  "pinData": {},
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
