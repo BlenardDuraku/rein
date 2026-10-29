@@ -1,0 +1,77 @@
+{
+  "extraKnownMarketplaces": {
+    "n8n-mcp-skills": {
+      "source": {
+        "source": "github",
+        "repo": "czlonkowski/n8n-skills"
+      }
+    },
+    "hyperframes": {
+      "source": {
+        "source": "github",
+        "repo": "heygen-com/hyperframes"
+      }
+    },
+    "nateherk": {
+      "source": {
+        "source": "github",
+        "repo": "nateherkai/scroll-craft"
+      }
+    },
+    "humanizer": {
+      "source": {
+        "source": "github",
+        "repo": "blader/humanizer"
+      }
+    },
+    "addy-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "addyosmani/agent-skills"
+      }
+    },
+    "expo-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "expo/skills"
+      }
+    },
+    "supabase-agent-skills": {
+      "source": {
+        "source": "github",
+        "repo": "supabase/agent-skills"
+      }
+    },
+    "stripe": {
+      "source": {
+        "source": "github",
+        "repo": "stripe/ai"
+      }
+    },
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "openseo": {
+      "source": {
+        "source": "github",
+        "repo": "every-app/open-seo"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "n8n-mcp-skills@n8n-mcp-skills": true,
+    "hyperframes@hyperframes": true,
+    "nateherk-design@nateherk": true,
+    "humanizer@humanizer": true,
+    "agent-skills@addy-agent-skills": true,
+    "expo@expo-plugins": true,
+    "supabase@supabase-agent-skills": true,
+    "postgres-best-practices@supabase-agent-skills": true,
+    "stripe@stripe": true,
+    "claude-security@claude-plugins-official": true,
+    "openseo@openseo": true
+  }
+}
